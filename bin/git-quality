@@ -1,0 +1,3 @@
+#!/bin/sh
+BASE=$(dirname $(dirname "$0"))
+python3 "$BASE/src/main.py" "$@"
