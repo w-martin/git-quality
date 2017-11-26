@@ -65,8 +65,8 @@ def objects_to_dateframe(merges):
 
 
 @click.command()
-@click.option('--directory')
-@click.option('--output')
+@click.option('--directory', required=True, help='Assess quality of the repo at the given path')
+@click.option('--output', required=True, help='Save graphs and stats to the given directory')
 def main(directory, output):
     log_text = get_commit_log(directory)
     merges = get_merges(log_text)
