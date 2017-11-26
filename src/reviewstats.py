@@ -72,17 +72,19 @@ def main(directory, output):
     merges = get_merges(log_text)
     logging.info("Extracted {no_merges:d} merged pull requests".format(no_merges=len(merges)))
 
-    merge_df = objects_to_dateframe(merges)
-
     output = os.path.abspath(output)
     try:
         os.makedirs(output)
     except OSError:
         pass
 
-    # overall PR histogram
+    # convert to pandas dataframe
+    merge_df = objects_to_dateframe(merges)
     merge_df.set_index(['date'], inplace=True)
-    ax = merge_df.groupby(pd.TimeGrouper(freq='M'))['author'].count().plot()
+    time_grouped_df = merge_df.groupby(pd.TimeGrouper(freq='M'))
+
+    # overall PR histogram
+    ax = time_grouped_df['author'].count().plot()
     ax.set_ylabel('no merged pull requests')
     ax.set_title('No merged pull requests by month')
     ax.get_figure().savefig(os.path.join(output, 'prs.png'))
@@ -94,7 +96,7 @@ def main(directory, output):
     ax.get_figure().savefig(os.path.join(output, 'prs_by_author.png'))
 
     # avg reviews by month
-    ax = merge_df.groupby(pd.TimeGrouper(freq='M'))['no_reviews'].mean().plot()
+    ax = time_grouped_df['no_reviews'].mean().plot()
     ax.set_ylabel('no_reviews')
     ax.set_title('Avg reviews by month')
     ax.get_figure().savefig(os.path.join(output, 'avg_reviews.png'))
@@ -105,14 +107,15 @@ def main(directory, output):
     ax.set_title('No authors by month')
     ax.get_figure().savefig(os.path.join(output, 'authors.png'))
 
-    # reviews / author by month
-    ax = (merge_df.groupby(pd.TimeGrouper(freq='M'))['no_reviews'].mean() /
-     merge_df.groupby([pd.TimeGrouper(freq='M'), 'no_reviews'])['no_reviews'].size().groupby(level=0).size()).plot()
+    # avg reviews / author by month
+    ax = (time_grouped_df['no_reviews'].mean() /
+          merge_df.groupby([pd.TimeGrouper(freq='M'), 'no_reviews'])['no_reviews'].size().groupby(level=0).size()).plot()
     ax.set_ylabel('avg reviews / no authors')
     ax.set_title('Average reviews / no authors by month')
     ax.get_figure().savefig(os.path.join(output, 'avg_reviews_by_authors.png'))
 
-    (merge_df.groupby(pd.TimeGrouper(freq='M'))['no_reviews'].sum() /
+    # total reviews / author by month
+    (time_grouped_df['no_reviews'].sum() /
      merge_df.groupby([pd.TimeGrouper(freq='M'), 'no_reviews'])['no_reviews'].size().groupby(level=0).size()).plot()
     ax.set_ylabel('total reviews / authors')
     ax.set_title('Total reviews / authors by month')
