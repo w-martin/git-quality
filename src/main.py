@@ -4,6 +4,7 @@ import os
 
 import click
 import pandas as pd
+import shutil
 
 import gitparser
 import graphs
@@ -45,7 +46,8 @@ def convert_commits_to_dateframe(commits):
 @click.command()
 @click.option('--directory', required=True, help='Assess quality of the repo at the given path')
 @click.option('--output', required=True, help='Save graphs and stats to the given directory')
-def main(directory, output):
+@click.option('--srcpath')
+def main(directory, output, srcpath='/opt/git-quality'):
     # load the git log and parse it
     log_text = load_commit_log(directory)
     merges = gitparser.extract_pr_commits(log_text)
@@ -63,6 +65,8 @@ def main(directory, output):
 
     # now plot some nice graphs
     graphs.plot_review_stats(merge_df, output)
+    # copy web template to view them
+    shutil.copyfile(os.path.join(srcpath, 'templates', 'index.html'), os.path.join(output, 'index.html'))
 
 
 if __name__ == '__main__':
