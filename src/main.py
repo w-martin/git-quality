@@ -12,7 +12,7 @@ import graphs
 logging.basicConfig(level=logging.INFO)
 
 # temporarily save the git log to this file and delete it afterwards
-GITLOG_FILENAME = 'aed.log'
+GITLOG_FILENAME = 'git_merges.log'
 
 
 def load_commit_log(directory):
@@ -66,7 +66,10 @@ def main(directory, output, srcpath='/opt/git-quality'):
     # now plot some nice graphs
     graphs.plot_review_stats(merge_df, output)
     # copy web template to view them
-    shutil.copyfile(os.path.join(srcpath, 'templates', 'index.html'), os.path.join(output, 'index.html'))
+    repo_name = os.path.basename(directory)
+    target_path = os.path.join(output, 'index.html')
+    shutil.copyfile(os.path.join(srcpath, 'templates', 'index.html'), target_path)
+    os.system('sed -i s/{name}/%s/g %s' % (repo_name, target_path))
 
 
 if __name__ == '__main__':
