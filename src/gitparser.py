@@ -1,3 +1,4 @@
+""" Functions for parsing git commit messages """
 import re
 from collections import namedtuple
 from functools import partial
@@ -10,7 +11,15 @@ date_regex = re.compile('Date:\s+(.*)\\n')
 reviewer_regex = re.compile('Approved-by:\s+(\w+ \w+ <[\w\d]+.?[\w\d]+@[\w\d]+.[\w\d]+>)')
 title_regex = re.compile('Merged in [\w/-]+ \(pull request #[\d]+\)\\n\s+\\n\s+([\w\s\d]*)\\n')
 
-COMMIT_COLUMNS = ['author', 'date', 'reviewers', 'title', 'no_reviews']
+# indexing constants
+AUTHOR = 'author'
+DATE = 'date'
+NO_REVIEWS = 'no_reviews'
+REVIEWERS = 'reviewers'
+TITLE = 'title'
+
+# storage for commits
+COMMIT_COLUMNS = [AUTHOR, DATE, REVIEWERS, TITLE, NO_REVIEWS]
 commit_structure = namedtuple('Commit', COMMIT_COLUMNS)
 
 
