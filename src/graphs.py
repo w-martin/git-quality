@@ -15,7 +15,6 @@ def plot_review_stats(df, output):
     # groupings
     time_grouped_df = df.groupby(pd.TimeGrouper(freq='M'))
     time_author_grouped_df = df.groupby([pd.TimeGrouper(freq='M'), gitparser.AUTHOR])
-    time_reviews_grouped_df = df.groupby([pd.TimeGrouper(freq='M'), gitparser.NO_REVIEWS])
     reviewer_cols = list(df[df.columns.difference(gitparser.COMMIT_COLUMNS)].columns)
 
     # overall PR histogram
@@ -27,22 +26,34 @@ def plot_review_stats(df, output):
     plt.close()
 
     # PRs by author
-    ax = time_author_grouped_df.count()[gitparser.TITLE].unstack(gitparser.AUTHOR).plot()
+    prs_by_author = time_author_grouped_df.count()[gitparser.TITLE].unstack(gitparser.AUTHOR)
+    ax = prs_by_author.fillna(0.).plot()
     ax.set_ylabel('no. merged pull requests')
     ax.set_title('No. merged pull requests by author per month')
-    plt.gca().set_ylim(bottom=0)
+    plt.gca().set_ylim(bottom=-1)
     lgd = ax.legend(loc=9, bbox_to_anchor=(1.6, 1.0))
     ax.get_figure().savefig(os.path.join(output, 'prs_by_author.png'),
                             additional_artists=[lgd], bbox_inches="tight")
     plt.close()
 
     # reviews by reviewer
-    ax = time_grouped_df[reviewer_cols].sum().plot()
+    reviews_by_person = time_grouped_df[reviewer_cols].sum()
+    ax = reviews_by_person.fillna(0.).plot()
     ax.set_ylabel('no. reviews')
     ax.set_title('No. reviews by reviewer per month')
-    plt.gca().set_ylim(bottom=0)
+    plt.gca().set_ylim(bottom=-1)
     lgd = ax.legend(loc=9, bbox_to_anchor=(1.6, 1.0))
     ax.get_figure().savefig(os.path.join(output, 'reviews_by_reviewer.png'),
+                            additional_artists=[lgd], bbox_inches="tight")
+    plt.close()
+
+    # reviews / PRs by author
+    ax = (reviews_by_person / prs_by_author).dropna(axis=1, how="all").plot()
+    ax.set_ylabel('reviews / prs')
+    ax.set_title('Reviews / PRs by author per month')
+    plt.gca().set_ylim(bottom=-1)
+    lgd = ax.legend(loc=9, bbox_to_anchor=(1.6, 1.0))
+    ax.get_figure().savefig(os.path.join(output, 'reviews_over_prs.png'),
                             additional_artists=[lgd], bbox_inches="tight")
     plt.close()
 
