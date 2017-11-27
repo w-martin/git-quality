@@ -6,9 +6,9 @@ from operator import is_not
 
 # regular expressions for parsing git commit messages (bitbucket merges tested)
 merge_regex = re.compile('commit (\S){40}\\n')
-author_regex = re.compile('Author:\s+(.*)\\n')
+author_regex = re.compile('Author:\s+([\w\s]*\w)\s?[\<\n]')
 date_regex = re.compile('Date:\s+(.*)\\n')
-reviewer_regex = re.compile('Approved-by:\s+((\w+\s+)*(\<\w*.?\w*@\w*.?\w*\>)?)')
+reviewer_regex = re.compile('Approved-by:\s+([\w ]+)')
 title_regex = re.compile('Merged in [\S]+ \(pull request #[\d]+\)\s+((\<[\w+\s]+\>)?[\w\s\d.]*)\s')
 
 # indexing constants
@@ -39,7 +39,7 @@ def parse_commit(text):
     try:
         author = author_regex.search(text).group(1)
         date = date_regex.search(text).group(1)
-        reviewers = [p[0].strip() for p in reviewer_regex.findall(text)]
+        reviewers = [r.strip().replace('\n', '') for r in reviewer_regex.findall(text)]
         title = title_regex.search(text).group(1)
         no_reviews = len(reviewers)
         return Commit(author, date, reviewers, title, no_reviews) if no_reviews > 0 else None

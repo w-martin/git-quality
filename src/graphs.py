@@ -16,6 +16,7 @@ def plot_review_stats(df, output):
     time_grouped_df = df.groupby(pd.TimeGrouper(freq='M'))
     time_author_grouped_df = df.groupby([pd.TimeGrouper(freq='M'), gitparser.AUTHOR])
     time_reviews_grouped_df = df.groupby([pd.TimeGrouper(freq='M'), gitparser.NO_REVIEWS])
+    reviewer_cols = list(df[df.columns.difference(gitparser.COMMIT_COLUMNS)].columns)
 
     # overall PR histogram
     ax = time_grouped_df[gitparser.AUTHOR].count().plot()
@@ -32,6 +33,16 @@ def plot_review_stats(df, output):
     plt.gca().set_ylim(bottom=0)
     lgd = ax.legend(loc=9, bbox_to_anchor=(1.6, 1.0))
     ax.get_figure().savefig(os.path.join(output, 'prs_by_author.png'),
+                            additional_artists=[lgd], bbox_inches="tight")
+    plt.close()
+
+    # reviews by reviewer
+    ax = time_grouped_df[reviewer_cols].sum().plot()
+    ax.set_ylabel('no. reviews')
+    ax.set_title('No. reviews by reviewer per month')
+    plt.gca().set_ylim(bottom=0)
+    lgd = ax.legend(loc=9, bbox_to_anchor=(1.6, 1.0))
+    ax.get_figure().savefig(os.path.join(output, 'reviews_by_reviewer.png'),
                             additional_artists=[lgd], bbox_inches="tight")
     plt.close()
 

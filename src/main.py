@@ -5,6 +5,7 @@ import os
 import click
 import pandas as pd
 import shutil
+import sklearn.preprocessing
 
 import gitparser
 import graphs
@@ -38,8 +39,13 @@ def convert_commits_to_dateframe(commits):
     :rtype: pd.DataFrame
     """
     df = pd.DataFrame(commits, columns=gitparser.COMMIT_COLUMNS)
+    # handle date
     df[gitparser.DATE] = pd.to_datetime(df[gitparser.DATE], errors='coerce')
     df.set_index([gitparser.DATE], inplace=True)
+    # one hot columns for reviewers
+    mlb = sklearn.preprocessing.MultiLabelBinarizer()
+    df = df.join(pd.DataFrame(mlb.fit_transform(df.pop(gitparser.REVIEWERS)),
+                              columns=mlb.classes_, index=df.index))
     return df
 
 
