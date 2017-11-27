@@ -62,21 +62,11 @@ def plot_review_stats(df, output):
     ax.get_figure().savefig(os.path.join(output, 'authors.png'))
     plt.close()
 
-    # avg reviews / author by month
-    ax = (time_grouped_df[gitparser.NO_REVIEWS].mean() /
-          time_reviews_grouped_df[gitparser.NO_REVIEWS].size().groupby(
-              level=0).size()).plot()
-    ax.set_ylabel('avg reviews / no authors')
-    ax.set_title('Average reviews / no authors per month')
-    plt.gca().set_ylim(bottom=0)
-    ax.get_figure().savefig(os.path.join(output, 'avg_reviews_by_authors.png'))
-    plt.close()
-
-    # total reviews / author by month
+    # reviews / author by month
     ax = (time_grouped_df[gitparser.NO_REVIEWS].sum() /
-          time_reviews_grouped_df[gitparser.NO_REVIEWS].size().groupby(level=0).size()).plot()
-    ax.set_ylabel('total reviews / authors')
-    ax.set_title('Total reviews / authors per month')
+          time_author_grouped_df[gitparser.AUTHOR].size().groupby(level=0).size()).plot()
+    ax.set_ylabel('reviews / authors')
+    ax.set_title('Reviews / authors per month')
     plt.gca().set_ylim(bottom=0)
-    ax.get_figure().savefig(os.path.join(output, 'total_reviews_by_authors.png'))
+    ax.get_figure().savefig(os.path.join(output, 'reviews_by_authors.png'))
     plt.close()
