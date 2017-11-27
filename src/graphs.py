@@ -19,16 +19,16 @@ def plot_review_stats(df, output):
 
     # overall PR histogram
     ax = time_grouped_df[gitparser.AUTHOR].count().plot()
-    ax.set_ylabel('no merged pull requests')
-    ax.set_title('No merged pull requests per month')
+    ax.set_ylabel('no. merged pull requests')
+    ax.set_title('No. merged pull requests per month')
     plt.gca().set_ylim(bottom=0)
     ax.get_figure().savefig(os.path.join(output, 'prs.png'))
     plt.close()
 
     # PRs by author
     ax = time_author_grouped_df.count()[gitparser.TITLE].unstack(gitparser.AUTHOR).plot()
-    ax.set_ylabel('no merged pull requests')
-    ax.set_title('No merged pull requests by author per month')
+    ax.set_ylabel('no. merged pull requests')
+    ax.set_title('No. merged pull requests by author per month')
     plt.gca().set_ylim(bottom=0)
     lgd = ax.legend(loc=9, bbox_to_anchor=(1.6, 1.0))
     ax.get_figure().savefig(os.path.join(output, 'prs_by_author.png'),
@@ -45,8 +45,8 @@ def plot_review_stats(df, output):
 
     # authors by month
     ax = time_author_grouped_df[gitparser.AUTHOR].size().groupby(level=0).size().plot()
-    ax.set_ylabel('no authors')
-    ax.set_title('No authors per month')
+    ax.set_ylabel('no. authors')
+    ax.set_title('No. authors per month')
     plt.gca().set_ylim(bottom=0)
     ax.get_figure().savefig(os.path.join(output, 'authors.png'))
     plt.close()
