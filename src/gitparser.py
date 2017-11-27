@@ -4,12 +4,12 @@ from collections import namedtuple
 from functools import partial
 from operator import is_not
 
-# regular expressions for parsing git commit messages
+# regular expressions for parsing git commit messages (bitbucket merges tested)
 merge_regex = re.compile('commit (\S){40}\\n')
 author_regex = re.compile('Author:\s+(.*)\\n')
 date_regex = re.compile('Date:\s+(.*)\\n')
-reviewer_regex = re.compile('Approved-by:\s+(\w+ \w+ <[\w\d]+.?[\w\d]+@[\w\d]+.[\w\d]+>)')
-title_regex = re.compile('Merged in [\w/-]+ \(pull request #[\d]+\)\\n\s+\\n\s+([\w\s\d]*)\\n')
+reviewer_regex = re.compile('Approved-by:\s+((\w+\s+)*(\<\w*.?\w*@\w*.?\w*\>)?)')
+title_regex = re.compile('Merged in [\S]+ \(pull request #[\d]+\)\s+((\<[\w+\s]+\>)?[\w\s\d.]*)\s')
 
 # indexing constants
 AUTHOR = 'author'
@@ -39,7 +39,7 @@ def parse_commit(text):
     try:
         author = author_regex.search(text).group(1)
         date = date_regex.search(text).group(1)
-        reviewers = reviewer_regex.findall(text)
+        reviewers = [p[0].strip() for p in reviewer_regex.findall(text)]
         title = title_regex.search(text).group(1)
         no_reviews = len(reviewers)
         return Commit(author, date, reviewers, title, no_reviews) if no_reviews > 0 else None
