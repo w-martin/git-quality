@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <title>{name} stats</title>
 </head>
+<script src="https://www.w3schools.com/lib/w3.js"></script>
 <body>
+<div w3-include-html="metrics.html"></div>
 <div id="image-table">
     <table>
 	    <tr>
@@ -40,5 +42,8 @@
 <h4>Review / PR rate per person</h4>
 <img src="reviews_over_prs.png">
 
+<script>
+    w3.includeHTML();
+</script>
 </body>
 </html>
