@@ -55,8 +55,10 @@ def convert_commits_to_dateframe(commits):
 @click.option('--srcpath')
 def main(directory, output, srcpath='/opt/git-quality'):
     # load the git log and parse it
-    log_text = load_commit_log(directory)
-    merges = gitparser.extract_pr_commits(log_text)
+    merges = []
+    for d in directory.split(','):
+        log_text = load_commit_log(d)
+        merges += gitparser.extract_pr_commits(log_text)
     logging.info("Extracted {no_merges:d} merged pull requests".format(no_merges=len(merges)))
 
     # convert to pandas dataframe
