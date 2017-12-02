@@ -1,10 +1,11 @@
 """ Main entry point """
 import logging
 import os
+import shutil
+from contextlib import contextmanager
 
 import click
 import pandas as pd
-import shutil
 import sklearn.preprocessing
 
 import gitparser
@@ -16,20 +17,45 @@ logging.basicConfig(level=logging.INFO)
 GITLOG_FILENAME = 'git_merges.log'
 
 
-def load_commit_log(directory):
+@contextmanager
+def cd(directory):
+    current_dir = os.getcwd()
+    os.chdir(directory)
+    yield
+    os.chdir(current_dir)
+
+
+def load_commit_log():
     """ Loads the commit log from the given directory
     :param str directory: the directory to load the commit log from
     :return: the commit log
     :rtype: str
     """
-    current_dir = os.getcwd()
-    os.chdir(directory)
     os.system('git log --use-mailmap --merges > {log_filename}'.format(log_filename=GITLOG_FILENAME))
     with open(GITLOG_FILENAME, 'r') as f:
         result = f.read()
     os.remove(GITLOG_FILENAME)
-    os.chdir(current_dir)
+    logging.info('Fetched commit log')
     return result
+
+
+def fetch_commit_stats(commit_hash):
+    command = 'git diff --shortstat -w {hash}^ {hash} > {log_filename}'.format(
+        hash=commit_hash, log_filename=GITLOG_FILENAME)
+    os.system(command)
+    with open(GITLOG_FILENAME, 'r') as f:
+        result = f.read()
+    os.remove(GITLOG_FILENAME)
+    no_files, lines_added, lines_deleted = gitparser.parse_commit_for_changes(result)
+    return no_files, lines_added, lines_deleted
+
+
+def set_commit_stats(commit):
+    commit_hash = commit.__getattribute__(gitparser.HASH)
+    no_files, lines_added, lines_deleted = fetch_commit_stats(commit_hash)
+    commit.__setattr__(gitparser.FILES, no_files)
+    commit.__setattr__(gitparser.INSERTIONS, lines_added)
+    commit.__setattr__(gitparser.DELETIONS, lines_deleted)
 
 
 def convert_commits_to_dateframe(commits):
@@ -42,6 +68,8 @@ def convert_commits_to_dateframe(commits):
     # handle date
     df[gitparser.DATE] = pd.to_datetime(df[gitparser.DATE], errors='coerce')
     df.set_index([gitparser.DATE], inplace=True)
+    # changes
+    df.changes = df.insertions + df.deletions
     # one hot columns for reviewers
     mlb = sklearn.preprocessing.MultiLabelBinarizer()
     df = df.join(pd.DataFrame(mlb.fit_transform(df.pop(gitparser.REVIEWERS)),
@@ -57,8 +85,16 @@ def main(directory, output, srcpath='/opt/git-quality'):
     # load the git log and parse it
     merges = []
     for d in directory.split(','):
-        log_text = load_commit_log(d)
-        merges += gitparser.extract_pr_commits(log_text)
+        with cd(d):
+            log_text = load_commit_log()
+            pr_commits = gitparser.extract_pr_commits(log_text)
+
+            # get info for files, lines added and deleted
+            for pr in pr_commits:
+                set_commit_stats(pr)
+
+            merges += pr_commits
+
     logging.info("Extracted {no_merges:d} merged pull requests".format(no_merges=len(merges)))
 
     # convert to pandas dataframe
