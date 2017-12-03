@@ -3,7 +3,6 @@ import calendar
 import os
 
 import matplotlib.pyplot as plt
-from matplotlib import cm
 import pandas as pd
 
 import gitparser
@@ -19,7 +18,7 @@ def plot_review_stats(df, output):
     time_author_grouped_df = df.groupby([pd.TimeGrouper(freq='M'), gitparser.AUTHOR])
     reviewer_cols = list(df[df.columns.difference(gitparser.COMMIT_COLUMNS)].columns)
 
-    prs_by_author = time_author_grouped_df.count()[gitparser.TITLE].unstack(gitparser.AUTHOR)
+    prs_by_author = time_author_grouped_df[gitparser.TITLE].count().unstack(gitparser.AUTHOR)
     changes_by_author = time_author_grouped_df[gitparser.CHANGES].sum().unstack(gitparser.AUTHOR)
     reviews_by_person = time_grouped_df[reviewer_cols].sum()
     reviews_by_prs = (reviews_by_person / prs_by_author).dropna(axis=1, how="all")
@@ -27,13 +26,13 @@ def plot_review_stats(df, output):
     avg_reviews_received = reviews_received_by_author / prs_by_author
 
     # metrics
-    metrics_df = pd.DataFrame(data={'benevolent': reviews_by_prs.idxmax(axis=1),
+    metrics_df = pd.DataFrame(data={'benevolent': reviews_by_prs[reviews_by_prs > 0.].idxmax(axis=1),
                                     'bookworm': reviews_by_person.idxmax(axis=1),
                                     'harmless': prs_by_author.idxmin(axis=1),
                                     'prolific': changes_by_author.idxmax(axis=1),
                                     'shakespear': avg_reviews_received.idxmax(axis=1),
                                     'shopper': prs_by_author.idxmax(axis=1),
-                                    'tl;dr': avg_reviews_received.idxmin(axis=1)})
+                                    'tl;dr': reviews_by_person[reviews_by_person > 1].idxmin(axis=1)})
     metrics_df.index = ['{year} {month}'.format(year=idx.year, month=calendar.month_name[idx.month])
                         for idx in metrics_df.index]
     with open(os.path.join(output, 'metrics.html'), 'w') as f:
@@ -51,7 +50,7 @@ def plot_review_stats(df, output):
 
     # changes / PRs by author
     ax = (changes_by_author / prs_by_author).plot(colormap='tab10')
-    ax.set_yscale("log")
+    ax.set_yscale('log', nonposy='clip')
     ax.set_ylabel('lines changed / PRs')
     ax.set_title('Lines changed / no. pull requests by author')
     lgd = ax.legend(loc=9, bbox_to_anchor=(1.3, 1.0))
@@ -89,9 +88,10 @@ def plot_review_stats(df, output):
 
     # reviews / PRs by author
     ax = reviews_by_prs.plot(colormap='tab10')
+    ax.set_yscale('log', nonposy='clip')
     ax.set_ylabel('reviews / prs')
     ax.set_title('Reviews / PRs by author per month')
-    plt.gca().set_ylim(bottom=-1)
+    # plt.gca().set_ylim(bottom=-1)
     lgd = ax.legend(loc=9, bbox_to_anchor=(1.3, 1.0))
     ax.get_figure().savefig(os.path.join(output, 'reviews_over_prs.png'),
                             additional_artists=[lgd], bbox_inches="tight")

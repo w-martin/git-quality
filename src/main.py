@@ -81,31 +81,46 @@ def convert_commits_to_dateframe(commits):
 @click.option('--directory', required=True, help='Assess quality of the repo at the given path')
 @click.option('--output', required=True, help='Save graphs and stats to the given directory')
 @click.option('--srcpath')
-def main(directory, output, srcpath='/opt/git-quality'):
-    # load the git log and parse it
-    merges = []
-    for d in directory.split(','):
-        with cd(d):
-            log_text = load_commit_log()
-            pr_commits = gitparser.extract_pr_commits(log_text)
+@click.option('--resume', is_flag=True, help='Load previously saved dataframe, if present')
+def main(directory, output, srcpath='/opt/git-quality', resume=False):
 
-            # get info for files, lines added and deleted
-            for pr in pr_commits:
-                set_commit_stats(pr)
+    results_path = os.path.join(output, 'merge_results.csv')
+    merge_df = None
+    if resume:
+        try:
+            merge_df = pd.DataFrame.from_csv(results_path)
+        except OSError:
+            pass
 
-            merges += pr_commits
+    if merge_df is None:
+        # load the git log and parse it
+        merges = []
+        for d in directory.split(','):
+            with cd(d):
+                log_text = load_commit_log()
+                pr_commits = gitparser.extract_pr_commits(log_text)
 
-    logging.info("Extracted {no_merges:d} merged pull requests".format(no_merges=len(merges)))
+                # get info for files, lines added and deleted
+                for pr in pr_commits:
+                    set_commit_stats(pr)
 
-    # convert to pandas dataframe
-    merge_df = convert_commits_to_dateframe(merges)
+                merges += pr_commits
 
-    # ensure output directory exists
-    output = os.path.abspath(output)
-    try:
-        os.makedirs(output)
-    except OSError:
-        pass
+        logging.info("Extracted {no_merges:d} merged pull requests".format(no_merges=len(merges)))
+
+        # convert to pandas dataframe
+        merge_df = convert_commits_to_dateframe(merges)
+
+        # ensure output directory exists
+        output = os.path.abspath(output)
+        try:
+            os.makedirs(output)
+        except OSError:
+            pass
+        try:
+            merge_df.to_csv(results_path)
+        except OSError:
+            pass
 
     # now plot some nice graphs
     graphs.plot_review_stats(merge_df, output)
