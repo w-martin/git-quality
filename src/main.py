@@ -39,25 +39,6 @@ def load_commit_log():
     return result
 
 
-def fetch_commit_stats(commit_hash):
-    command = 'git diff --shortstat -w {hash}^ {hash} > {log_filename}'.format(
-        hash=commit_hash, log_filename=GITLOG_FILENAME)
-    os.system(command)
-    with open(GITLOG_FILENAME, 'r') as f:
-        result = f.read()
-    os.remove(GITLOG_FILENAME)
-    no_files, lines_added, lines_deleted = gitparser.parse_commit_for_changes(result)
-    return no_files, lines_added, lines_deleted
-
-
-def set_commit_stats(commit):
-    commit_hash = commit.__getattribute__(gitparser.HASH)
-    no_files, lines_added, lines_deleted = fetch_commit_stats(commit_hash)
-    commit.__setattr__(gitparser.FILES, no_files)
-    commit.__setattr__(gitparser.INSERTIONS, lines_added)
-    commit.__setattr__(gitparser.DELETIONS, lines_deleted)
-
-
 def convert_commits_to_dateframe(commits):
     """ Converts a list of Commits to a pandas dataframe indexed by date
     :param list[gitparser.Commit] commits: the list of commits to convert
@@ -68,8 +49,6 @@ def convert_commits_to_dateframe(commits):
     # handle date
     df[gitparser.DATE] = pd.to_datetime(df[gitparser.DATE], errors='coerce')
     df.set_index([gitparser.DATE], inplace=True)
-    # changes
-    df.changes = df.insertions + df.deletions
     # one hot columns for reviewers
     mlb = sklearn.preprocessing.MultiLabelBinarizer()
     df = df.join(pd.DataFrame(mlb.fit_transform(df.pop(gitparser.REVIEWERS)),
@@ -100,9 +79,9 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False):
                 log_text = load_commit_log()
                 pr_commits = gitparser.extract_pr_commits(log_text)
 
-                # get info for files, lines added and deleted
-                for pr in pr_commits:
-                    set_commit_stats(pr)
+                # # get info for files, lines added and deleted
+                # for pr in pr_commits:
+                #     set_commit_stats(pr)
 
                 merges += pr_commits
 

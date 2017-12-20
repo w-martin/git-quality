@@ -15,9 +15,6 @@ author_regex = re.compile('Author:\s+([\w\s]*\w)\s?[\<\\n]')
 date_regex = re.compile('Date:\s+(.*)\n')
 title_regex = re.compile('Merged in [\S]+ \(pull request #[\d]+\)\s+((\<[\w+\s]+\>)?[\w\s\d.]*)\s')
 reviewer_regex = re.compile('Approved-by:\s+([\w ]+)')
-files_regex = re.compile('(\d+)\sfile')
-insertions_regex = re.compile('(\d+)\sinsertion')
-deletions_regex = re.compile('(\d+)\sdeletion')
 
 # indexing constants
 HASH = 'commit_hash'
@@ -26,13 +23,9 @@ DATE = 'date'
 NO_REVIEWS = 'no_reviews'
 REVIEWERS = 'reviewers'
 TITLE = 'title'
-FILES = 'files_changed'
-INSERTIONS = 'insertions'
-DELETIONS = 'deletions'
-CHANGES = 'changes'
 
 # storage for commits
-COMMIT_COLUMNS = [HASH, AUTHOR, DATE, TITLE, REVIEWERS, NO_REVIEWS, FILES, INSERTIONS, DELETIONS, CHANGES]
+COMMIT_COLUMNS = [HASH, AUTHOR, DATE, TITLE, REVIEWERS, NO_REVIEWS]
 commit_structure = recordclass('Commit', COMMIT_COLUMNS)
 
 
@@ -62,7 +55,7 @@ def parse_pr_commit(commit_hash, text):
             pass
         no_reviews = len(reviewers)
         if no_reviews > -1:
-            return Commit(commit_hash, author, date, title, reviewers, no_reviews, 0, 0, 0, 0)
+            return Commit(commit_hash, author, date, title, reviewers, no_reviews)
     except:
         pass
     return None
@@ -84,13 +77,6 @@ def extract_pr_commits(commit_log):
     logger1.info('Extracted {no_merges} PRs'.format(no_merges=len(results)))
 
     return results
-
-
-def parse_commit_for_changes(text):
-    no_files = int(regex_extract_variable(text, files_regex, 0))
-    insertions = int(regex_extract_variable(text, insertions_regex, 0))
-    deletions = int(regex_extract_variable(text, deletions_regex, 0))
-    return no_files, insertions, deletions
 
 
 def regex_extract_variable(text, regex, default=None):
