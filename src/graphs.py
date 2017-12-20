@@ -107,3 +107,5 @@ def plot_review_stats(df, output):
     ax.get_figure().savefig(os.path.join(output, 'reviews_by_reviewer.png'),
                             additional_artists=[lgd], bbox_inches="tight")
     plt.close()
+
+    return metrics_df
