@@ -58,9 +58,19 @@ def plot_review_stats(df, output):
     ax.get_figure().savefig(os.path.join(output, 'avg_reviews.png'))
     plt.close()
 
+    # grab x labels for bar chart
+    x_labels_0 = ax.get_xticklabels(0)[::-1]
+    x_labels_1 = ax.get_xticklabels(1)
+    for i in range(len(x_labels_1)):
+        if len(x_labels_1[i].get_text()) == 0:
+            x_labels_1[i] = x_labels_0.pop()
+
     # authors by month
     authors_df = time_author_grouped_df[gitparser.AUTHOR].size().groupby(level=0).size()[:-1]
-    ax = authors_df.plot(colormap='tab10', linewidth=2)
+    ax = authors_df.plot(colormap='tab10', linewidth=2, kind='bar')
+    # fix labels
+    ax.set_xticklabels(x_labels_1, minor=0)
+
     ax.set_ylabel('no. authors')
     ax.set_title('No. authors per month')
     plt.gca().set_ylim(bottom=0)
@@ -81,7 +91,7 @@ def plot_review_stats(df, output):
     ax = pr_author_df.plot(colormap='tab10', linewidth=2)
     ax.set_ylabel('no. merged pull requests')
     ax.set_title('No. merged pull requests by author per month')
-    plt.gca().set_ylim(bottom=-1)
+    plt.gca().set_ylim(bottom=1)
     lgd = ax.legend(loc=9, bbox_to_anchor=(1.3, 1.0))
     ax.get_figure().savefig(os.path.join(output, 'prs_by_author.png'),
                             additional_artists=[lgd], bbox_inches="tight")
@@ -92,7 +102,7 @@ def plot_review_stats(df, output):
     ax = reviews_df.plot(colormap='tab10', linewidth=2)
     ax.set_ylabel('no. reviews')
     ax.set_title('No. reviews by reviewer per month')
-    plt.gca().set_ylim(bottom=-1)
+    plt.gca().set_ylim(bottom=1)
     lgd = ax.legend(loc=9, bbox_to_anchor=(1.3, 1.0))
     ax.get_figure().savefig(os.path.join(output, 'reviews_by_reviewer.png'),
                             additional_artists=[lgd], bbox_inches="tight")
