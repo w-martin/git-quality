@@ -46,7 +46,7 @@ def plot_review_stats(df, output):
     ax.set_ylabel('no. pull requests')
     ax.set_title('No. merged pull requests per month')
     plt.gca().set_ylim(bottom=0)
-    ax.get_figure().savefig(os.path.join(output, 'prs.png'))
+    ax.get_figure().savefig(os.path.join(output, 'prs.png'), bbox_inches='tight')
     plt.close()
 
     # avg reviews by month
@@ -55,7 +55,7 @@ def plot_review_stats(df, output):
     ax.set_ylabel(gitparser.NO_REVIEWS)
     ax.set_title('Avg reviews per month')
     plt.gca().set_ylim(bottom=0)
-    ax.get_figure().savefig(os.path.join(output, 'avg_reviews.png'))
+    ax.get_figure().savefig(os.path.join(output, 'avg_reviews.png'), bbox_inches='tight')
     plt.close()
 
     # grab x labels for bar chart
@@ -74,7 +74,7 @@ def plot_review_stats(df, output):
     ax.set_ylabel('no. authors')
     ax.set_title('No. authors per month')
     plt.gca().set_ylim(bottom=0)
-    ax.get_figure().savefig(os.path.join(output, 'authors.png'))
+    ax.get_figure().savefig(os.path.join(output, 'authors.png'), bbox_inches='tight')
     plt.close()
 
     # reviews / author by month
@@ -83,7 +83,7 @@ def plot_review_stats(df, output):
     ax.set_ylabel('reviews / authors')
     ax.set_title('Reviews / authors per month')
     plt.gca().set_ylim(bottom=0)
-    ax.get_figure().savefig(os.path.join(output, 'reviews_by_authors.png'))
+    ax.get_figure().savefig(os.path.join(output, 'reviews_by_authors.png'), bbox_inches='tight')
     plt.close()
 
     # PRs by author
