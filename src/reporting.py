@@ -22,4 +22,4 @@ def email_awards(email_address, awards_df, repo_name, srcpath=os.getcwd()):
     msg['To'] = email_address
     s = smtplib.SMTP('localhost')
     s.sendmail('gitquality@somewhere.com', [email_address], msg.as_string())
-    s.quit()
+    s.close()
