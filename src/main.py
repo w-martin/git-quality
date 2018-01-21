@@ -2,6 +2,7 @@
 import logging
 import os
 import shutil
+import tempfile
 from contextlib import contextmanager
 
 import click
@@ -31,10 +32,12 @@ def load_commit_log():
     :return: the commit log
     :rtype: str
     """
-    os.system('git log --use-mailmap --merges > {log_filename}'.format(log_filename=GITLOG_FILENAME))
-    with open(GITLOG_FILENAME, 'r') as f:
+    tempdir = tempfile.gettempdir()
+    log_filename = os.path.join(tempdir, GITLOG_FILENAME)
+    os.system('git log --use-mailmap --merges > {log_filename}'.format(log_filename=log_filename))
+    with open(log_filename, 'r') as f:
         result = f.read()
-    os.remove(GITLOG_FILENAME)
+    shutil.rmtree(tempdir, ignore_errors=True)
     logging.info('Fetched commit log')
     return result
 
