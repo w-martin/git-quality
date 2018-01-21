@@ -11,6 +11,7 @@ import sklearn.preprocessing
 
 import gitparser
 import graphs
+import reporting
 
 logging.basicConfig(level=logging.INFO)
 
@@ -64,7 +65,8 @@ def convert_commits_to_dateframe(commits):
 @click.option('--output', required=True, help='Save graphs and stats to the given directory')
 @click.option('--srcpath')
 @click.option('--resume', is_flag=True, help='Load previously saved dataframe, if present')
-def main(directory, output, srcpath='/opt/git-quality', resume=False):
+@click.option('--email', default=None, type=str, help='Email last month\'s summary to this address if set')
+def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None):
 
     results_path = os.path.join(output, 'merge_results.csv')
     merge_df = None
@@ -81,10 +83,6 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False):
             with cd(d):
                 log_text = load_commit_log()
                 pr_commits = gitparser.extract_pr_commits(log_text)
-
-                # # get info for files, lines added and deleted
-                # for pr in pr_commits:
-                #     set_commit_stats(pr)
 
                 merges += pr_commits
 
@@ -105,9 +103,12 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False):
             pass
 
     # now plot some nice graphs
-    graphs.plot_review_stats(merge_df, output)
-    # copy web template to view them
+    metrics_df = graphs.plot_review_stats(merge_df, output)
     repo_name = os.path.basename(directory)
+    # email award winners
+    if email:
+        reporting.email_awards(email, metrics_df[:1], repo_name, srcpath=srcpath)
+    # copy web template to view them
     target_path = os.path.join(output, 'index.html')
     shutil.copyfile(os.path.join(srcpath, 'templates', 'index.html'), target_path)
     os.system('sed -i s/{name}/%s/g %s' % (repo_name, target_path))
