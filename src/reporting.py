@@ -3,6 +3,8 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 
+FROM_ADDRESS = 'gitquality@somewhere.com'
+
 
 def email_awards(email_address, awards_df, repo_name, srcpath=os.getcwd()):
     """ Emails award winners to the given email address
@@ -18,8 +20,8 @@ def email_awards(email_address, awards_df, repo_name, srcpath=os.getcwd()):
 
     msg = MIMEText(content)
     msg['Subject'] = '{repo} quality stats awards for {month}'.format(repo=repo_name, month=month)
-    msg['From'] = 'gitquality@somewhere.com'
+    msg['From'] = FROM_ADDRESS
     msg['To'] = email_address
     s = smtplib.SMTP('localhost')
-    s.sendmail('gitquality@somewhere.com', [email_address], msg.as_string())
+    s.sendmail(FROM_ADDRESS, [email_address], msg.as_string())
     s.close()
