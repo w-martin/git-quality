@@ -60,6 +60,14 @@ def convert_commits_to_dateframe(commits):
     return df
 
 
+def compute_awards(merge_df):
+    # reviewed more than usual - well done
+    # more changes than usual (code only) - well done
+    # net deleter of the month
+    # consider smaller PRs (PR changes above avg in month)
+    return pd.DataFrame()
+
+
 @click.command()
 @click.option('--directory', required=True, help='Assess quality of the repo at the given path')
 @click.option('--output', required=True, help='Save graphs and stats to the given directory')
@@ -103,10 +111,11 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
             pass
 
     # now plot some nice graphs
-    metrics_df = graphs.plot_review_stats(merge_df, output)
+    graphs.plot_review_stats(merge_df, output)
     repo_name = os.path.basename(directory)
     # email award winners
     if email:
+        metrics_df = compute_awards(merge_df)
         reporting.email_awards(email, metrics_df[:1], repo_name, srcpath=srcpath)
     # copy web template to view them
     target_path = os.path.join(output, 'index.html')
