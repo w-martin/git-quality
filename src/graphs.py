@@ -2,7 +2,9 @@
 import calendar
 import os
 
+import datetime
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sb
 
@@ -14,13 +16,17 @@ def plot_review_stats(df, output):
     :param pd.DataFrame df: dataframe to plot
     :param str output: directory to save plots to
     """
+    # filters
+    date_threshold = df.index.max().to_pydatetime() - datetime.timedelta(days=365 / 3)
+    recent_authors = np.sort(df[df.index > date_threshold][gitparser.AUTHOR].unique())
+
     # groupings
     time_grouped_df = df.groupby(pd.TimeGrouper(freq='M'))
     time_author_grouped_df = df.groupby([pd.TimeGrouper(freq='M'), gitparser.AUTHOR])
     reviewer_cols = list(df[df.columns.difference(gitparser.COMMIT_COLUMNS)].columns)
 
-    prs_by_author = time_author_grouped_df[gitparser.TITLE].count().unstack(gitparser.AUTHOR)
-    reviews_by_person = time_grouped_df[reviewer_cols].sum()
+    prs_by_author = time_author_grouped_df[gitparser.TITLE].count().unstack(gitparser.AUTHOR).loc[:, recent_authors]
+    reviews_by_person = time_grouped_df[reviewer_cols].sum().loc[:, recent_authors]
     reviews_received_by_author = time_author_grouped_df[gitparser.NO_REVIEWS].sum().unstack(gitparser.AUTHOR)
 
     # metrics
