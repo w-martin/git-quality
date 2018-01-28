@@ -1,0 +1,7 @@
+# conda install --file requirements.txt
+click
+matplotlib
+numpy
+pandas
+scikit-learn
+seaborn
