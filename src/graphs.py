@@ -15,6 +15,9 @@ def plot_review_stats(df, output):
     :param pd.DataFrame df: dataframe to plot
     :param str output: directory to save plots to
     """
+    df.sort_index(inplace=True)
+    df['month'] = df.index.strftime("%b'%y")
+    df['week'] = df.index.strftime("%b'%U'%y")
     # filters
     date_threshold = df.index.max().to_pydatetime() - datetime.timedelta(days=365 / 3)
     recent_authors = np.sort(df[df.index > date_threshold][gitparser.AUTHOR].unique())
@@ -42,13 +45,13 @@ def plot_review_stats(df, output):
     plt.close()
 
     # avg reviews by month
-    reviews_mean = time_grouped_df[gitparser.NO_REVIEWS].mean()[:-1].as_matrix()
-    reviews_std = time_grouped_df[gitparser.NO_REVIEWS].std()[:-1].as_matrix()
+    df['month'] = df.index.strftime("%b'%y")
+
     fig, ax = plt.subplots(figsize=(7, 4))
-    ax.errorbar(x=pr_df.index, y=reviews_mean, yerr=reviews_std, fmt='o',
-                markersize=8, capsize=8)
-    ax.set_xticks(pr_df.index)
-    ax.set_xticklabels([], minor=1)
+    # sb.violinplot(x=)
+    sb.violinplot(x='month', y=gitparser.NO_REVIEWS, data=df, ax=ax)
+    # ax.set_xticks(pr_df.index)
+    # ax.set_xticklabels([], minor=1)
     ax.set_xticklabels(xticklabels, rotation=0)
     ax.set_ylabel(gitparser.NO_REVIEWS)
     ax.set_title('Avg reviews per month')
