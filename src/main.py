@@ -18,7 +18,8 @@ import reporting
 logging.basicConfig(level=logging.INFO)
 
 # temporarily save the git log to this file and delete it afterwards
-GITLOG_FILENAME = 'git_merges.log'
+GITMERGE_FILENAME = 'git_merges.log'
+GITCOMMIT_FILENAME = 'git_commits.log'
 
 
 @contextmanager
@@ -35,7 +36,7 @@ def load_pr_log():
     :rtype: str
     """
     tempdir = tempfile.gettempdir()
-    log_filename = os.path.join(tempdir, GITLOG_FILENAME)
+    log_filename = os.path.join(tempdir, GITMERGE_FILENAME)
     os.system('git log --use-mailmap --merges > {log_filename}'.format(log_filename=log_filename))
     with open(log_filename, 'r') as f:
         result = f.read()
@@ -50,8 +51,8 @@ def load_commit_log():
     :rtype: str
     """
     tempdir = tempfile.gettempdir()
-    log_filename = os.path.join(tempdir, GITLOG_FILENAME)
-    os.system('git log --use-mailmap --no-merges > {log_filename}'.format(log_filename=log_filename))
+    log_filename = os.path.join(tempdir, GITCOMMIT_FILENAME)
+    os.system('git log --use-mailmap --no-merges --shortstat > {log_filename}'.format(log_filename=log_filename))
     with open(log_filename, 'r') as f:
         result = f.read()
     shutil.rmtree(tempdir, ignore_errors=True)

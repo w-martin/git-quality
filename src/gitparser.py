@@ -14,7 +14,10 @@ pr_regex = re.compile('pull request')
 author_regex = re.compile('Author:\s+([\w\s]*\w)\s?[\<\\n]')
 date_regex = re.compile('Date:\s+(.*)\n')
 pr_title_regex = re.compile('Merged in [\S]+ \(pull request #[\d]+\)\s+((\<[\w+\s]+\>)?[\w\s\d.]*)\s')
-commit_title_regex = re.compile('\+\d{4}\s*(\S[\S\s.]*)\s*$')
+commit_title_regex = re.compile('\+\d{4}\s*(\S[\S\s.]*)\s*\d+\sfile')
+commit_files_regex = re.compile('(\d+)\sfile')
+commit_insertions_regex = re.compile('(\d+)\sinsertion')
+commit_deletions_regex = re.compile('(\d+)\sdeletion')
 reviewer_regex = re.compile('Approved-by:\s+([\w ]+)')
 
 # indexing constants
@@ -24,12 +27,15 @@ DATE = 'date'
 NO_REVIEWS = 'no_reviews'
 REVIEWERS = 'reviewers'
 TITLE = 'title'
+FILES = 'files'
+INSERTIONS = 'insertions'
+DELETIONS = 'deletions'
 
 # storage for prs
 PR_COLUMNS = [HASH, AUTHOR, DATE, TITLE, REVIEWERS, NO_REVIEWS]
 pr_structure = recordclass('PullRequest', PR_COLUMNS)
 # storage for commits
-COMMIT_COLUMNS = [HASH, AUTHOR, DATE, TITLE]
+COMMIT_COLUMNS = [HASH, AUTHOR, DATE, TITLE, FILES, INSERTIONS, DELETIONS]
 commit_structure = recordclass('Commit', COMMIT_COLUMNS)
 
 
@@ -45,8 +51,9 @@ class Commit(commit_structure):
     """ Represents a git commit """
 
     def __repr__(self):
-        return 'Commit by {author} on {date}, reviewed by {no_reviews}: {title}'.format(
-            author=self.author, date=self.date, title=self.title)
+        return 'Commit by {author} on {date}, files={files}, insertions={insertions}, deletions={deletions}'.format(
+            author=self.author, date=self.date, title=self.title, files=self.files, insertions=self.insertions,
+            deletions=self.deletions)
 
 
 def parse_pull_requests(commit_hash, text):
@@ -85,7 +92,16 @@ def parse_commits(commit_hash, text):
         author = author_regex.search(text).group(1)
         date = date_regex.search(text).group(1)
         title = commit_title_regex.search(text).group(1).strip()
-        return Commit(commit_hash, author, date, title)
+        files = commit_files_regex.search(text).group(1).strip()
+        try:
+            insertions = commit_insertions_regex.search(text).group(1).strip()
+        except (IndexError, AttributeError):
+            insertions = 0
+        try:
+            deletions = commit_deletions_regex.search(text).group(1).strip()
+        except (IndexError, AttributeError):
+            deletions = 0
+        return Commit(commit_hash, author, date, title, files, insertions, deletions)
     except Exception as e:
         pass
     return None

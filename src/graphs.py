@@ -114,15 +114,33 @@ def plot_commit_stats(df, output, authors):
     xticklabels = [dt.strftime("%b'%y") if (i % 3 == 0) else '' for i, dt in enumerate(pr_df.index)]
     prs_by_author = time_author_grouped_df[gitparser.TITLE].count().unstack(gitparser.AUTHOR).loc[:, authors]
     pr_author_df = prs_by_author.fillna(0.)
+    insertions_by_author = time_author_grouped_df[gitparser.INSERTIONS].sum().unstack(gitparser.AUTHOR).loc[:, authors]
+    deletions_by_author = time_author_grouped_df[gitparser.DELETIONS].sum().unstack(gitparser.AUTHOR).loc[:, authors]
+
+    # commits
     fig, ax = plt.subplots(figsize=(7, 4))
     pr_author_df[pr_author_df.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
     ax.set_xticklabels(xticklabels, rotation=0)
-    ax.set_ylabel('no. merged pull requests')
-    ax.set_title('No. merged pull requests by author per month')
+    ax.set_ylabel('no. commits')
+    ax.set_title('No. commits by author per month')
     plt.gca().set_ylim(bottom=1)
-    handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[::-1], labels[::-1], loc='upper left')
+    commit_handles, commit_labels = ax.get_legend_handles_labels()
+    ax.legend(commit_handles[::-1], commit_labels[::-1], loc='upper left')
     fig.savefig(os.path.join(output, 'commits_by_author.png'), bbox_inches="tight")
+    plt.close()
+
+    # changes
+    insertions_df = insertions_by_author.fillna(0.)
+    deletions_df = insertions_by_author.fillna(0.)
+    fig, ax = plt.subplots(figsize=(7, 4))
+    insertions_df[insertions_df.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
+    (-deletions_df / 2).plot.bar(colormap='tab10_r', linewidth=2, ax=ax, stacked=True)
+    ax.set_xticklabels(xticklabels, rotation=0)
+    ax.set_ylabel('changes')
+    # ax.set_yscale('symlog')
+    ax.set_title('Changes by author per month')
+    ax.legend(commit_handles[::-1], commit_labels[::-1], loc='upper left')
+    fig.savefig(os.path.join(output, 'changes_by_author.png'), bbox_inches="tight")
     plt.close()
 
     # punch card
