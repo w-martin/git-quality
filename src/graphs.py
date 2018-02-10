@@ -16,6 +16,7 @@ def plot_pr_stats(df, output, authors):
     :param pd.DataFrame df: dataframe to plot
     :param str output: directory to save plots to
     """
+    df = df[df[gitparser.AUTHOR].isin(authors)]
     # groupings
     time_grouped_df = df.groupby(pd.Grouper(freq='M'))
     time_author_grouped_df = df.groupby([pd.Grouper(freq='M'), gitparser.AUTHOR])
@@ -105,6 +106,7 @@ def plot_pr_stats(df, output, authors):
 
 
 def plot_commit_stats(df, output, authors):
+    df = df[df[gitparser.AUTHOR].isin(authors)]
     # groupings
     time_grouped_df = df.groupby(pd.Grouper(freq='M'))
     time_author_grouped_df = df.groupby([pd.Grouper(freq='M'), gitparser.AUTHOR])

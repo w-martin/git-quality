@@ -194,14 +194,30 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
     graphs.plot_pr_stats(pr_df, output, authors=recent_authors)
     graphs.plot_commit_stats(commit_df, output, authors=recent_authors)
     repo_name = os.path.basename(directory)
+    # copy web template to view them
+    nav = '<ul>{items}</ul>'.format(items=''.join(
+        ['<li><a href="{name}/">{name}</a></li>'.format(name=a.replace(' ', '_')) for a in recent_authors]))
+    target_path = os.path.join(output, 'index.html')
+    with open(os.path.join(srcpath, 'templates', 'index.html'), 'r') as f:
+        page_text = f.read()
+    with open(target_path, 'w') as f:
+        f.write(page_text.format(name=repo_name, nav=nav))
+
+    for author_name in recent_authors:
+        # plot graphs
+        directory = os.path.join(output, author_name.replace(' ', '_'))
+        os.makedirs(directory, exist_ok=True)
+        graphs.plot_pr_stats(pr_df, directory, authors=[author_name])
+        graphs.plot_commit_stats(commit_df, directory, authors=[author_name])
+        # copy web template to view them
+        target_path = os.path.join(directory, 'index.html')
+        with open(target_path, 'w') as f:
+            f.write(page_text.format(name=author_name, nav=''))
+
     # email award winners
     if email:
         metrics_df = compute_awards(pr_df)
         reporting.email_awards(email, metrics_df[:1], repo_name, srcpath=srcpath)
-    # copy web template to view them
-    target_path = os.path.join(output, 'index.html')
-    shutil.copyfile(os.path.join(srcpath, 'templates', 'index.html'), target_path)
-    os.system('sed -i s/{name}/%s/g %s' % (repo_name, target_path))
 
 
 if __name__ == '__main__':
