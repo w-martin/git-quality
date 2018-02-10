@@ -10,7 +10,7 @@ import seaborn as sb
 import gitparser
 
 
-def plot_review_stats(df, output):
+def plot_pr_stats(df, output):
     """ Plots graphs indicating statistics on pull requests and reviews
     :param pd.DataFrame df: dataframe to plot
     :param str output: directory to save plots to

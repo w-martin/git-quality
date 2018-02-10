@@ -111,7 +111,7 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
             pass
 
     # now plot some nice graphs
-    graphs.plot_review_stats(merge_df, output)
+    graphs.plot_pr_stats(merge_df, output)
     repo_name = os.path.basename(directory)
     # email award winners
     if email:
