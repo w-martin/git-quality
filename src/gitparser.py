@@ -8,12 +8,13 @@ from operator import is_not
 logger1 = logging.getLogger('git log parser')
 
 # regular expressions for parsing git commit messages (bitbucket merges tested)
-commit_regex = re.compile('commit\s(\S+)\s')
+commit_regex = re.compile('commit\s([\d\w]{40})\D')
 merge_regex = re.compile('[Mm]erge')
 pr_regex = re.compile('pull request')
 author_regex = re.compile('Author:\s+([\w\s]*\w)\s?[\<\\n]')
 date_regex = re.compile('Date:\s+(.*)\n')
-title_regex = re.compile('Merged in [\S]+ \(pull request #[\d]+\)\s+((\<[\w+\s]+\>)?[\w\s\d.]*)\s')
+pr_title_regex = re.compile('Merged in [\S]+ \(pull request #[\d]+\)\s+((\<[\w+\s]+\>)?[\w\s\d.]*)\s')
+commit_title_regex = re.compile('\+\d{4}\s*(\S[\S\s.]*)\s*$')
 reviewer_regex = re.compile('Approved-by:\s+([\w ]+)')
 
 # indexing constants
@@ -24,12 +25,15 @@ NO_REVIEWS = 'no_reviews'
 REVIEWERS = 'reviewers'
 TITLE = 'title'
 
+# storage for prs
+PR_COLUMNS = [HASH, AUTHOR, DATE, TITLE, REVIEWERS, NO_REVIEWS]
+pr_structure = recordclass('PullRequest', PR_COLUMNS)
 # storage for commits
-COMMIT_COLUMNS = [HASH, AUTHOR, DATE, TITLE, REVIEWERS, NO_REVIEWS]
+COMMIT_COLUMNS = [HASH, AUTHOR, DATE, TITLE]
 commit_structure = recordclass('Commit', COMMIT_COLUMNS)
 
 
-class Commit(commit_structure):
+class PullRequest(pr_structure):
     """ Represents a git pull request merge commit """
 
     def __repr__(self):
@@ -37,16 +41,24 @@ class Commit(commit_structure):
             author=self.author, date=self.date, reviewers=self.no_reviews, title=self.title)
 
 
-def parse_pr_commit(commit_hash, text):
+class Commit(commit_structure):
+    """ Represents a git commit """
+
+    def __repr__(self):
+        return 'Commit by {author} on {date}, reviewed by {no_reviews}: {title}'.format(
+            author=self.author, date=self.date, title=self.title)
+
+
+def parse_pull_requests(commit_hash, text):
     """ Parses the given commit text
     :param str text: the text to parse
-    :return: a Commit with extracted relevant fields, or None if an error occurred
-    :rtype: Commit
+    :return: a PullRequest with extracted relevant fields, or None if an error occurred
+    :rtype: PullRequest
     """
     try:
         author = author_regex.search(text).group(1)
         date = date_regex.search(text).group(1)
-        title = title_regex.search(text).group(1).strip()
+        title = pr_title_regex.search(text).group(1).strip()
         reviewers = [r.strip().replace('\n', '') for r in reviewer_regex.findall(text)]
         # no self reviews allowed in these stats
         try:
@@ -55,23 +67,41 @@ def parse_pr_commit(commit_hash, text):
             pass
         no_reviews = len(reviewers)
         if no_reviews > -1:
-            return Commit(commit_hash, author, date, title, reviewers, no_reviews)
+            return PullRequest(commit_hash, author, date, title, reviewers, no_reviews)
     except:
         pass
     return None
 
 
-def extract_pr_commits(commit_log):
+def parse_commits(commit_hash, text):
+    """ Parses the given commit text
+    :param str text: the text to parse
+    :return: a Commit with extracted relevant fields, or None if an error occurred
+    :rtype: PullRequest
+    """
+    if len(text.strip()) == 0:
+        return None
+    try:
+        author = author_regex.search(text).group(1)
+        date = date_regex.search(text).group(1)
+        title = commit_title_regex.search(text).group(1).strip()
+        return Commit(commit_hash, author, date, title)
+    except Exception as e:
+        pass
+    return None
+
+
+def extract_pull_requests(commit_log):
     """ Extracts Commits from the given log
     :param str commit_log: the log to extract pull request merge commits from
     :return: a list of pull request merge commits
-    :rtype: list[Commit]
+    :rtype: list[PullRequest]
     """
     commits = commit_regex.split(commit_log)[1:]
     # form tuples of commit hash, log
     commits = list(zip(commits[::2], commits[1::2]))
     logger1.info('Extracted {no_merges} merges'.format(no_merges=len(commits)))
-    results = [parse_pr_commit(*c) for c in commits]
+    results = [parse_pull_requests(*c) for c in commits]
     results = list(filter(partial(is_not, None), results))
 
     logger1.info('Extracted {no_merges} PRs'.format(no_merges=len(results)))
@@ -84,3 +114,16 @@ def regex_extract_variable(text, regex, default=None):
         return regex.search(text).group(1)
     except AttributeError:
         return default
+
+
+def extract_commits(log_text):
+    commits = commit_regex.split(log_text)[1:]
+    # form tuples of commit hash, log
+    commits = list(zip(commits[::2], commits[1::2]))
+    logger1.info('Extracted {no_commits} commits'.format(no_commits=len(commits)))
+    results = [parse_commits(*c) for c in commits]
+    results = list(filter(partial(is_not, None), results))
+
+    logger1.info('Extracted {no_commits} commits'.format(no_commits=len(results)))
+
+    return results

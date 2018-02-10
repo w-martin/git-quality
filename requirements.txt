@@ -1,4 +1,5 @@
-# conda install --file requirements.txt
+# conda install -n gitquality --file requirements.txt
+cairo
 click
 matplotlib
 numpy
