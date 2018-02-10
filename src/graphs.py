@@ -105,17 +105,19 @@ def plot_pr_stats(df, output, authors):
 
 
 def plot_commit_stats(df, output, authors):
-    df.sort_index(inplace=True)
-
     # groupings
     time_grouped_df = df.groupby(pd.Grouper(freq='M'))
     time_author_grouped_df = df.groupby([pd.Grouper(freq='M'), gitparser.AUTHOR])
-    pr_df = time_grouped_df[gitparser.AUTHOR].count()
-    xticklabels = [dt.strftime("%b'%y") if (i % 3 == 0) else '' for i, dt in enumerate(pr_df.index)]
+    commit_df = time_grouped_df[gitparser.AUTHOR].count()
+    xticklabels = [dt.strftime("%b'%y") if (i % 3 == 0) else '' for i, dt in enumerate(commit_df.index)]
     prs_by_author = time_author_grouped_df[gitparser.TITLE].count().unstack(gitparser.AUTHOR).loc[:, authors]
     pr_author_df = prs_by_author.fillna(0.)
     insertions_by_author = time_author_grouped_df[gitparser.INSERTIONS].sum().unstack(gitparser.AUTHOR).loc[:, authors]
     deletions_by_author = time_author_grouped_df[gitparser.DELETIONS].sum().unstack(gitparser.AUTHOR).loc[:, authors]
+    code_files_by_author = time_author_grouped_df[gitparser.CODE_FILES].sum().unstack(gitparser.AUTHOR).loc[:,
+                             authors]
+    code_changes_by_author = time_author_grouped_df[gitparser.CODE_CHANGES].sum().unstack(gitparser.AUTHOR).loc[:,
+                             authors]
 
     # commits
     fig, ax = plt.subplots(figsize=(7, 4))
@@ -129,18 +131,54 @@ def plot_commit_stats(df, output, authors):
     fig.savefig(os.path.join(output, 'commits_by_author.png'), bbox_inches="tight")
     plt.close()
 
-    # changes
+    # file changes
     insertions_df = insertions_by_author.fillna(0.)
-    deletions_df = insertions_by_author.fillna(0.)
+    deletions_df = deletions_by_author.fillna(0.)
     fig, ax = plt.subplots(figsize=(7, 4))
     insertions_df[insertions_df.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
     (-deletions_df / 2).plot.bar(colormap='tab10_r', linewidth=2, ax=ax, stacked=True)
     ax.set_xticklabels(xticklabels, rotation=0)
     ax.set_ylabel('changes')
-    # ax.set_yscale('symlog')
-    ax.set_title('Changes by author per month')
+    ax.set_title('Insertions / deletions by author per month')
     ax.legend(commit_handles[::-1], commit_labels[::-1], loc='upper left')
     fig.savefig(os.path.join(output, 'changes_by_author.png'), bbox_inches="tight")
+    plt.close()
+
+    # code files
+    code_files_df = code_files_by_author.fillna(0.)
+    fig, ax = plt.subplots(figsize=(7, 4))
+    code_files_df[code_files_df.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
+    ax.set_xticklabels(xticklabels, rotation=0)
+    ax.set_ylabel('code files changed')
+    ax.set_title('Code files changes by author per month')
+    ax.legend(commit_handles[::-1], commit_labels[::-1], loc='upper left')
+    fig.savefig(os.path.join(output, 'code_files_by_author.png'), bbox_inches="tight")
+    plt.close()
+
+    # code changes
+    code_changes_df = code_changes_by_author.fillna(0.)
+    fig, ax = plt.subplots(figsize=(7, 4))
+    code_changes_df[code_changes_df.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
+    ax.set_xticklabels(xticklabels, rotation=0)
+    ax.set_ylabel('code lines changed')
+    ax.set_title('Code lines changed by author per month')
+    ax.legend(commit_handles[::-1], commit_labels[::-1], loc='upper left')
+    fig.savefig(os.path.join(output, 'code_changes_by_author.png'), bbox_inches="tight")
+    plt.close()
+
+    # avg reviews by month
+    changes_mean = time_grouped_df[gitparser.CODE_CHANGES].mean().as_matrix()
+    changes_std = time_grouped_df[gitparser.CODE_CHANGES].std().as_matrix()
+    fig, ax = plt.subplots(figsize=(7, 4))
+    ax.errorbar(x=commit_df.index, y=changes_mean, yerr=changes_std, fmt='o',
+                markersize=8, capsize=8)
+    ax.set_xticks(commit_df.index)
+    ax.set_xticklabels([], minor=1)
+    ax.set_xticklabels(xticklabels, rotation=0)
+    ax.set_ylabel(gitparser.CODE_CHANGES)
+    ax.set_title('Avg changes per commit')
+    plt.gca().set_ylim(bottom=0)
+    fig.savefig(os.path.join(output, 'commit_changes.png'), bbox_inches='tight')
     plt.close()
 
     # punch card

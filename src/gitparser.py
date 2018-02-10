@@ -1,9 +1,11 @@
 """ Functions for parsing git commit messages """
 import logging
 import re
-from recordclass import recordclass
 from functools import partial
 from operator import is_not
+
+import numpy as np
+from recordclass import recordclass
 
 logger1 = logging.getLogger('git log parser')
 
@@ -18,6 +20,7 @@ commit_title_regex = re.compile('\+\d{4}\s*(\S[\S\s.]*)\s*\d+\sfile')
 commit_files_regex = re.compile('(\d+)\sfile')
 commit_insertions_regex = re.compile('(\d+)\sinsertion')
 commit_deletions_regex = re.compile('(\d+)\sdeletion')
+code_files_regex = re.compile('\.py\s+\|\s(\d+)\s')
 reviewer_regex = re.compile('Approved-by:\s+([\w ]+)')
 
 # indexing constants
@@ -30,12 +33,14 @@ TITLE = 'title'
 FILES = 'files'
 INSERTIONS = 'insertions'
 DELETIONS = 'deletions'
+CODE_FILES = 'code_files'
+CODE_CHANGES = 'code_changes'
 
 # storage for prs
 PR_COLUMNS = [HASH, AUTHOR, DATE, TITLE, REVIEWERS, NO_REVIEWS]
 pr_structure = recordclass('PullRequest', PR_COLUMNS)
 # storage for commits
-COMMIT_COLUMNS = [HASH, AUTHOR, DATE, TITLE, FILES, INSERTIONS, DELETIONS]
+COMMIT_COLUMNS = [HASH, AUTHOR, DATE, TITLE, FILES, INSERTIONS, DELETIONS, CODE_FILES, CODE_CHANGES]
 commit_structure = recordclass('Commit', COMMIT_COLUMNS)
 
 
@@ -51,9 +56,11 @@ class Commit(commit_structure):
     """ Represents a git commit """
 
     def __repr__(self):
-        return 'Commit by {author} on {date}, files={files}, insertions={insertions}, deletions={deletions}'.format(
+        return 'Commit by {author} on {date}, ' \
+               'files={files}, insertions={insertions}, deletions={deletions}' \
+               'code_files={code_files}, code changes={code_changes}'.format(
             author=self.author, date=self.date, title=self.title, files=self.files, insertions=self.insertions,
-            deletions=self.deletions)
+            deletions=self.deletions, code_files=self.code_files, code_code_changes=self.code_changes)
 
 
 def parse_pull_requests(commit_hash, text):
@@ -101,7 +108,10 @@ def parse_commits(commit_hash, text):
             deletions = commit_deletions_regex.search(text).group(1).strip()
         except (IndexError, AttributeError):
             deletions = 0
-        return Commit(commit_hash, author, date, title, files, insertions, deletions)
+        code_change_instances = code_files_regex.findall(text)
+        code_files = len(code_change_instances)
+        code_changes = int(np.sum([int(fc) for fc in code_change_instances]))
+        return Commit(commit_hash, author, date, title, files, insertions, deletions, code_files, code_changes)
     except Exception as e:
         pass
     return None
