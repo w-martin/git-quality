@@ -10,11 +10,14 @@ import seaborn as sb
 import gitparser
 
 
-def plot_review_stats(df, output):
+def plot_pr_stats(df, output):
     """ Plots graphs indicating statistics on pull requests and reviews
     :param pd.DataFrame df: dataframe to plot
     :param str output: directory to save plots to
     """
+    df.sort_index(inplace=True)
+    df['month'] = df.index.strftime("%b'%y")
+    df['week'] = df.index.strftime("%b'%U'%y")
     # filters
     date_threshold = df.index.max().to_pydatetime() - datetime.timedelta(days=365 / 3)
     recent_authors = np.sort(df[df.index > date_threshold][gitparser.AUTHOR].unique())
