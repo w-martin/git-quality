@@ -1,9 +1,12 @@
 """ Module for emailing notifications"""
 import os
 import smtplib
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-FROM_ADDRESS = 'gitquality@somewhere.com'
+import html2text
+
+import util
 
 
 def email_awards(email_address, awards_df, repo_name, srcpath=os.getcwd()):
@@ -20,8 +23,25 @@ def email_awards(email_address, awards_df, repo_name, srcpath=os.getcwd()):
 
     msg = MIMEText(content)
     msg['Subject'] = '{repo} quality stats awards for {month}'.format(repo=repo_name, month=month)
-    msg['From'] = FROM_ADDRESS
+    from_address = util.read_config('email')['from']
+    msg['From'] = from_address
     msg['To'] = email_address
     s = smtplib.SMTP('localhost')
-    s.sendmail(FROM_ADDRESS, [email_address], msg.as_string())
+    s.sendmail(from_address, [email_address], msg.as_string())
+    s.close()
+
+
+def email_summary(email_address, content, subject):
+    """ Emails award winners to the given email address
+    :param str email_address: the address to email
+    """
+    from_address = util.read_config('email')['from']
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = from_address
+    msg['To'] = email_address
+    msg.attach(MIMEText(html2text.html2text(content), 'plain'))
+    msg.attach(MIMEText(content, 'html'))
+    s = smtplib.SMTP('localhost')
+    s.sendmail(from_address, [email_address], msg.as_string())
     s.close()
