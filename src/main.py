@@ -151,8 +151,8 @@ def run_tracking(pr_df, commit_df, srcpath, output, repo_name, home_url, recent_
         last_week_commits = commit_df[commit_df.index >= week_start]
         last_mean = last_month_prs.no_reviews.mean()
         this_mean = last_week_prs.no_reviews.mean()
-        review_text = 'The mean reviews per pull request was {avg_review_week}, ' \
-                      '{status} previous weeks which saw a mean rate of {avg_review_month}'.format(
+        review_text = 'The mean reviews per pull request was {avg_review_week:.2f}, ' \
+                      '{status} previous weeks which saw a mean rate of {avg_review_month:.2f}'.format(
             avg_review_week=this_mean, avg_review_month=last_mean,
             status='about the same as' if last_mean * 0.9 < this_mean < last_mean * 1.1 else
             'higher than' if this_mean > last_mean else 'lower than'
