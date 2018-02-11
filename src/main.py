@@ -190,8 +190,8 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
     home_url = util.read_config('server')['url']
     repo_name = os.path.basename(directory)
 
-    nav = '<ul>{items}</ul>'.format(items=''.join(
-        ['<li><a href="{name}/">{name}</a></li>'.format(name=a.replace(' ', '_')) for a in recent_authors]))
+    nav = ''.join(
+        ['<a href="{name_ref}/">{name}</a>'.format(name=a, name_ref=a.replace(' ', '_')) for a in recent_authors])
     with open(os.path.join(srcpath, 'templates', 'index.html'), 'r') as f:
         page_text = f.read()
     html = page_text.format(name=repo_name, nav=nav, home=home_url, monthly=home_url, weekly=home_url + 'weekly/')

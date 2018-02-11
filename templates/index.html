@@ -4,17 +4,24 @@
     <meta charset="UTF-8">
     <title>{name} stats</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body>
 <div class="navbar">
   <a href="{home}">Home</a>
   <a href="{monthly}">Month view</a>
   <a href="{weekly}">Week view</a>
+    <div class="dropdown">
+    <button class="dropbtn">Authors
+      <i class="fa fa-caret-down"></i>
+    </button>
+    <div class="dropdown-content">
+      {nav}
+    </div>
+  </div>
 </div>
-<br>
 <h1>{name} stats</h1>
-{nav}
-<div id="image-table">
+    <div id="image-table">
     <table>
 	    <tr>
     	    <td style="padding:5px" align="center">

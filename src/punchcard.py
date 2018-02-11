@@ -73,8 +73,8 @@ def plot_punchcard(width, height, dates):
     cr.rectangle(left, top, 25 * distance, 8 * distance)
     cr.fill()
     
-    # set black
-    cr.set_source_rgb(0, 0, 0)
+    # set white
+    cr.set_source_rgb(1, 1, 1)
     
     # draw x-axis and y-axis
     cr.move_to(left, top)
