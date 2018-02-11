@@ -99,13 +99,13 @@ def parse_commits(commit_hash, text):
         author = author_regex.search(text).group(1)
         date = date_regex.search(text).group(1)
         title = commit_title_regex.search(text).group(1).strip()
-        files = commit_files_regex.search(text).group(1).strip()
+        files = int(commit_files_regex.search(text).group(1).strip())
         try:
-            insertions = commit_insertions_regex.search(text).group(1).strip()
+            insertions = int(commit_insertions_regex.search(text).group(1).strip())
         except (IndexError, AttributeError):
             insertions = 0
         try:
-            deletions = commit_deletions_regex.search(text).group(1).strip()
+            deletions = int(commit_deletions_regex.search(text).group(1).strip())
         except (IndexError, AttributeError):
             deletions = 0
         code_change_instances = code_files_regex.findall(text)
