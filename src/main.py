@@ -119,6 +119,56 @@ def compute_daterange():
     return start, end
 
 
+def run_tracking(pr_df, commit_df, srcpath, output, repo_name, home_url, recent_authors):
+    config = util.read_config('summary')
+    email = config['email']
+    day = config['day']
+    today = datetime.datetime.today()
+    is_today = today.strftime('%A') == day
+    objectives = config['objectives']
+    authors = config['authors']
+
+    monitors_str = '<tr>' \
+                   '<td>{email}</td><td>{day}</td><td>{objectives}</td><td>{authors}</td>' \
+                   '</tr>'.format(email=email, day=day, objectives=objectives, authors=authors)
+
+    with open(os.path.join(srcpath, 'templates', 'tracking.html'), 'r') as f:
+        tracking_text = f.read()
+    target_path = os.path.join(output, 'tracking.html')
+    with open(target_path, 'w') as f:
+        f.write(tracking_text.format(name=repo_name, nav=compute_nav(home_url, recent_authors, weekly=False),
+                                     home=home_url, monthly=home_url, weekly=home_url + 'weekly/',
+                                     tracking=home_url + 'tracking.html', monitors=monitors_str))
+
+    if is_today:
+        month_start = today - datetime.timedelta(days=28)
+        week_start = today - datetime.timedelta(days=7)
+        last_month_prs = pr_df[(pr_df.index >= month_start) & (pr_df.index < week_start)]
+        last_week_prs = pr_df[pr_df.index >= week_start]
+        last_week_commits = commit_df[commit_df.index >= week_start]
+        last_mean = last_month_prs.no_reviews.mean()
+        last_std = last_month_prs.no_reviews.std()
+        this_mean = last_week_prs.no_reviews.mean()
+        review_text = 'The mean reviews per pull request was {avg_review_week}, ' \
+                      '{status} previous weeks which saw a mean rate of {avg_review_month}'.format(
+            avg_review_week=this_mean, avg_review_month=last_mean,
+            status='about the same as' if last_mean - last_std < this_mean < last_mean + last_std else
+            'higher than' if this_mean > last_mean else 'lower than'
+        )
+
+        with open(os.path.join(srcpath, 'templates', 'summary.html'), 'r') as f:
+            page_text = f.read()
+        page_text = page_text.format(
+            no_prs=last_week_prs.shape[0], no_commits=last_week_commits.shape[0],
+            no_lines=last_week_commits.insertions.sum() + last_week_commits.deletions.sum(),
+            no_code_lines=last_week_commits.code_changes.sum(),
+            review_text=review_text, name=repo_name,
+            link=home_url
+        )
+        subject = 'git-quality weekly summary'
+        reporting.email_summary(email, page_text, subject)
+
+
 @click.command()
 @click.option('--directory', required=True, help='Assess quality of the repo at the given path')
 @click.option('--output', required=True, help='Save graphs and stats to the given directory')
@@ -147,13 +197,15 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
     target_path = os.path.join(output, 'index.html')
     with open(target_path, 'w') as f:
         f.write(page_text.format(name=repo_name, nav=compute_nav(home_url, recent_authors, weekly=False),
-                                 home=home_url, monthly=home_url, weekly=home_url + 'weekly/'))
+                                 home=home_url, monthly=home_url, weekly=home_url + 'weekly/',
+                                 tracking=home_url + 'tracking.html'))
 
     shutil.copy(os.path.join(srcpath, 'templates', 'styles.css'), os.path.join(output, 'weekly', 'styles.css'))
     target_path = os.path.join(output, 'weekly', 'index.html')
     with open(target_path, 'w') as f:
         f.write(page_text.format(name=repo_name, nav=compute_nav(home_url, recent_authors, weekly=True),
-                                 home=home_url, monthly=home_url, weekly=home_url + 'weekly/'))
+                                 home=home_url, monthly=home_url, weekly=home_url + 'weekly/',
+                                 tracking=home_url + 'tracking.html'))
 
     # plot graphs
     if plotgraphs:
@@ -179,7 +231,8 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
             with open(target_path, 'w') as f:
                 f.write(page_text.format(name=author_name, nav=compute_nav(home_url, recent_authors, weekly=False),
                                          home=home_url, monthly=home_url + author_name.replace(' ', '_') + '/',
-                                         weekly=home_url + 'weekly/' + author_name.replace(' ', '_')))
+                                         weekly=home_url + 'weekly/' + author_name.replace(' ', '_'),
+                                         tracking=home_url + 'tracking.html'))
 
             directory = os.path.join(output, 'weekly', author_name.replace(' ', '_'))
             os.makedirs(directory, exist_ok=True)
@@ -193,8 +246,9 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
             with open(target_path, 'w') as f:
                 f.write(page_text.format(name=author_name, nav=compute_nav(home_url, recent_authors, weekly=True),
                                          home=home_url, monthly=home_url + author_name.replace(' ', '_') + '/',
-                                         weekly=home_url + 'weekly/' + author_name.replace(' ', '_')))
-
+                                         weekly=home_url + 'weekly/' + author_name.replace(' ', '_'),
+                                         tracking=home_url + 'tracking.html'))
+    run_tracking(pr_df, commit_df, srcpath, output, repo_name, home_url, recent_authors)
     # email award winners
     if email:
         metrics_df = compute_awards(pr_df)
