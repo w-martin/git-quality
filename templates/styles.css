@@ -15,14 +15,6 @@ body {
     color: white;
 }
 
-#page-footer a {
-     color: #ffffff;
-}
-
-#page-footer a:hover {
-     color: #999999;
-}
-
 /* Navbar container */
 .navbar {
   overflow: hidden;

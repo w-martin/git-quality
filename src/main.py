@@ -126,16 +126,128 @@ def compute_daterange():
 @click.option('--resume', is_flag=True, help='Load previously saved dataframe, if present')
 @click.option('--email', default=None, type=str, help='Email last month\'s summary to this address if set')
 @click.option('--authors/--no-authors', default=True)
-def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None, authors=True):
-    results_path = os.path.join(output, 'prs.csv')
+@click.option('--plotgraphs/--no-plotgraphs', default=True)
+def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None, authors=True, plotgraphs=True):
     date_start, date_end = compute_daterange()
+    pr_df = fetch_pr_df(date_end, date_start, directory, output, resume)
+    commit_df = fetch_commit_df(date_end, date_start, directory, output, resume)
+
+    # filter for author
+    recent_authors = compute_recent_authors(pr_df)
+
+    # copy web template to view them
+    home_url = util.read_config('server')['url']
+    repo_name = os.path.basename(directory)
+
+    with open(os.path.join(srcpath, 'templates', 'index.html'), 'r') as f:
+        page_text = f.read()
+
+    os.makedirs(output + '/weekly/', exist_ok=True)
+    shutil.copy(os.path.join(srcpath, 'templates', 'styles.css'), os.path.join(output, 'styles.css'))
+    target_path = os.path.join(output, 'index.html')
+    with open(target_path, 'w') as f:
+        f.write(page_text.format(name=repo_name, nav=compute_nav(home_url, recent_authors, weekly=False),
+                                 home=home_url, monthly=home_url, weekly=home_url + 'weekly/'))
+
+    shutil.copy(os.path.join(srcpath, 'templates', 'styles.css'), os.path.join(output, 'weekly', 'styles.css'))
+    target_path = os.path.join(output, 'weekly', 'index.html')
+    with open(target_path, 'w') as f:
+        f.write(page_text.format(name=repo_name, nav=compute_nav(home_url, recent_authors, weekly=True),
+                                 home=home_url, monthly=home_url, weekly=home_url + 'weekly/'))
+
+    # plot graphs
+    if plotgraphs:
+        graphs.plot_pr_stats(pr_df, output, authors=recent_authors, review_authors=recent_authors)
+        graphs.plot_commit_stats(commit_df, output, authors=recent_authors)
+
+        graphs.plot_pr_stats(pr_df, output + '/weekly/', authors=recent_authors, review_authors=recent_authors,
+                             frequency='W')
+        graphs.plot_commit_stats(commit_df, output + '/weekly/', authors=recent_authors, frequency='W')
+
+    if authors:
+        for author_name in recent_authors:
+            # plot graphs
+            directory = os.path.join(output, author_name.replace(' ', '_'))
+            os.makedirs(directory, exist_ok=True)
+            if plotgraphs:
+                graphs.plot_pr_stats(pr_df, directory, authors=[author_name], review_authors=recent_authors,
+                                     frequency='M')
+                graphs.plot_commit_stats(commit_df, directory, authors=[author_name], frequency='M')
+
+            shutil.copy(os.path.join(srcpath, 'templates', 'styles.css'), os.path.join(directory, 'styles.css'))
+            target_path = os.path.join(directory, 'index.html')
+            with open(target_path, 'w') as f:
+                f.write(page_text.format(name=author_name, nav=compute_nav(home_url, recent_authors, weekly=False),
+                                         home=home_url, monthly=home_url + author_name.replace(' ', '_') + '/',
+                                         weekly=home_url + 'weekly/' + author_name.replace(' ', '_')))
+
+            directory = os.path.join(output, 'weekly', author_name.replace(' ', '_'))
+            os.makedirs(directory, exist_ok=True)
+            if plotgraphs:
+                graphs.plot_pr_stats(pr_df, directory, authors=[author_name], review_authors=recent_authors,
+                                     frequency='W')
+                graphs.plot_commit_stats(commit_df, directory, authors=[author_name], frequency='W')
+
+            shutil.copy(os.path.join(srcpath, 'templates', 'styles.css'), os.path.join(directory, 'styles.css'))
+            target_path = os.path.join(directory, 'index.html')
+            with open(target_path, 'w') as f:
+                f.write(page_text.format(name=author_name, nav=compute_nav(home_url, recent_authors, weekly=True),
+                                         home=home_url, monthly=home_url + author_name.replace(' ', '_') + '/',
+                                         weekly=home_url + 'weekly/' + author_name.replace(' ', '_')))
+
+    # email award winners
+    if email:
+        metrics_df = compute_awards(pr_df)
+        reporting.email_awards(email, metrics_df[:1], repo_name, srcpath=srcpath)
+
+
+def compute_nav(base_url, recent_authors, weekly=False):
+    return ''.join(
+        ['<a href="{url}{week_str}{name_ref}/">{name}</a>'.format(name=a, name_ref=a.replace(' ', '_'),
+                                                                  url=base_url, week_str='weekly/' if weekly else '')
+         for a in recent_authors])
+
+
+def compute_recent_authors(pr_df):
+    date_threshold = pr_df.index.max().to_pydatetime() - datetime.timedelta(days=365 / 3)
+    recent_authors = np.sort(pr_df[pr_df.index > date_threshold][gitparser.AUTHOR].unique())
+    return recent_authors
+
+
+def fetch_commit_df(date_end, date_start, directory, output, resume):
+    results_path = os.path.join(output, 'commits.csv')
+    commit_df = None
+    if resume:
+        try:
+            commit_df = pd.read_csv(results_path, parse_dates=True, index_col=0)
+        except OSError:
+            pass
+    if commit_df is None:
+        # load the git log and parse it
+        commits = []
+        for d in directory.split(','):
+            with cd(d):
+                log_text = load_commit_log()
+                commits += gitparser.extract_commits(log_text)
+        commit_df = convert_commits_to_dateframe(commits, date_start, date_end)
+
+        # ensure output directory exists
+        os.makedirs(output, exist_ok=True)
+        try:
+            commit_df.to_csv(results_path)
+        except OSError:
+            pass
+    return commit_df
+
+
+def fetch_pr_df(date_end, date_start, directory, output, resume):
+    results_path = os.path.join(output, 'prs.csv')
     pr_df = None
     if resume:
         try:
             pr_df = pd.read_csv(results_path, parse_dates=True, index_col=0)
         except OSError:
             pass
-
     if pr_df is None:
         # load the git log and parse it
         merges = []
@@ -156,96 +268,7 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
             pr_df.to_csv(results_path)
         except OSError:
             pass
-
-    results_path = os.path.join(output, 'commits.csv')
-    commit_df = None
-    if resume:
-        try:
-            commit_df = pd.read_csv(results_path, parse_dates=True, index_col=0)
-        except OSError:
-            pass
-
-    if commit_df is None:
-        # load the git log and parse it
-        commits = []
-        for d in directory.split(','):
-            with cd(d):
-                log_text = load_commit_log()
-                commits += gitparser.extract_commits(log_text)
-        commit_df = convert_commits_to_dateframe(commits, date_start, date_end)
-
-        # ensure output directory exists
-        os.makedirs(output, exist_ok=True)
-        try:
-            commit_df.to_csv(results_path)
-        except OSError:
-            pass
-    os.makedirs(output + '/weekly/', exist_ok=True)
-
-    # filter for author
-    date_threshold = pr_df.index.max().to_pydatetime() - datetime.timedelta(days=365 / 3)
-    recent_authors = np.sort(pr_df[pr_df.index > date_threshold][gitparser.AUTHOR].unique())
-
-    # copy web template to view them
-    home_url = util.read_config('server')['url']
-    repo_name = os.path.basename(directory)
-
-    nav = ''.join(
-        ['<a href="{name_ref}/">{name}</a>'.format(name=a, name_ref=a.replace(' ', '_')) for a in recent_authors])
-    with open(os.path.join(srcpath, 'templates', 'index.html'), 'r') as f:
-        page_text = f.read()
-    html = page_text.format(name=repo_name, nav=nav, home=home_url, monthly=home_url, weekly=home_url + 'weekly/')
-
-    shutil.copy(os.path.join(srcpath, 'templates', 'styles.css'), os.path.join(output, 'styles.css'))
-    target_path = os.path.join(output, 'index.html')
-    with open(target_path, 'w') as f:
-        f.write(html)
-
-    shutil.copy(os.path.join(srcpath, 'templates', 'styles.css'), os.path.join(output, 'weekly', 'styles.css'))
-    target_path = os.path.join(output, 'weekly', 'index.html')
-    with open(target_path, 'w') as f:
-        f.write(html)
-
-    # plot graphs
-    graphs.plot_pr_stats(pr_df, output, authors=recent_authors, review_authors=recent_authors)
-    graphs.plot_commit_stats(commit_df, output, authors=recent_authors)
-
-    graphs.plot_pr_stats(pr_df, output + '/weekly/', authors=recent_authors, review_authors=recent_authors,
-                         frequency='W')
-    graphs.plot_commit_stats(commit_df, output + '/weekly/', authors=recent_authors, frequency='W')
-
-    if authors:
-        for author_name in recent_authors:
-            # copy web template to view them
-            html = page_text.format(name=author_name, nav='', home=home_url,
-                                    monthly=home_url + author_name.replace(' ', '_') + '/',
-                                    weekly=home_url + 'weekly/' + author_name.replace(' ', '_'))
-            # plot graphs
-            directory = os.path.join(output, author_name.replace(' ', '_'))
-            os.makedirs(directory, exist_ok=True)
-            graphs.plot_pr_stats(pr_df, directory, authors=[author_name], review_authors=recent_authors, frequency='M')
-            graphs.plot_commit_stats(commit_df, directory, authors=[author_name], frequency='M')
-
-            shutil.copy(os.path.join(srcpath, 'templates', 'styles.css'), os.path.join(directory, 'styles.css'))
-            target_path = os.path.join(directory, 'index.html')
-            with open(target_path, 'w') as f:
-                f.write(html)
-
-            directory = os.path.join(output, 'weekly', author_name.replace(' ', '_'))
-            os.makedirs(directory, exist_ok=True)
-            graphs.plot_pr_stats(pr_df, directory, authors=[author_name], review_authors=recent_authors,
-                                 frequency='W')
-            graphs.plot_commit_stats(commit_df, directory, authors=[author_name], frequency='W')
-
-            shutil.copy(os.path.join(srcpath, 'templates', 'styles.css'), os.path.join(directory, 'styles.css'))
-            target_path = os.path.join(directory, 'index.html')
-            with open(target_path, 'w') as f:
-                f.write(html)
-
-    # email award winners
-    if email:
-        metrics_df = compute_awards(pr_df)
-        reporting.email_awards(email, metrics_df[:1], repo_name, srcpath=srcpath)
+    return pr_df
 
 
 if __name__ == '__main__':
