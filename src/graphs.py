@@ -11,7 +11,7 @@ import gitparser
 import punchcard
 
 
-def plot_pr_stats(df, output, authors, review_authors):
+def plot_pr_stats(df, output, authors, review_authors, frequency='M'):
     """ Plots graphs indicating statistics on pull requests and reviews
     :param pd.DataFrame df: dataframe to plot
     :param str output: directory to save plots to
@@ -21,8 +21,8 @@ def plot_pr_stats(df, output, authors, review_authors):
         return
 
     # groupings
-    time_grouped_df = df.groupby(pd.Grouper(freq='M'))
-    time_author_grouped_df = df.groupby([pd.Grouper(freq='M'), gitparser.AUTHOR])
+    time_grouped_df = df.groupby(pd.Grouper(freq=frequency))
+    time_author_grouped_df = df.groupby([pd.Grouper(freq=frequency), gitparser.AUTHOR])
     reviewer_cols = list(df[df.columns.difference(gitparser.PR_COLUMNS)].columns)
 
     prs_by_author = time_author_grouped_df[gitparser.TITLE].count().unstack(gitparser.AUTHOR).loc[:, authors]
@@ -108,11 +108,11 @@ def plot_pr_stats(df, output, authors, review_authors):
     plt.close()
 
 
-def plot_commit_stats(df, output, authors):
+def plot_commit_stats(df, output, authors, frequency='M'):
     df = df[df[gitparser.AUTHOR].isin(authors)]
     # groupings
-    time_grouped_df = df.groupby(pd.Grouper(freq='M'))
-    time_author_grouped_df = df.groupby([pd.Grouper(freq='M'), gitparser.AUTHOR])
+    time_grouped_df = df.groupby(pd.Grouper(freq=frequency))
+    time_author_grouped_df = df.groupby([pd.Grouper(freq=frequency), gitparser.AUTHOR])
     commit_df = time_grouped_df[gitparser.AUTHOR].count()
     xticklabels = [dt.strftime("%b'%y") if (i % 3 == 0) else '' for i, dt in enumerate(commit_df.index)]
     prs_by_author = time_author_grouped_df[gitparser.TITLE].count().unstack(gitparser.AUTHOR).loc[:, authors]
@@ -179,13 +179,14 @@ def plot_commit_stats(df, output, authors):
     fig, ax = plt.subplots(figsize=(7, 4))
     ax.errorbar(x=commit_df.index, y=changes_mean, yerr=changes_std, fmt='o',
                 markersize=8, capsize=8)
+    # sb.violinplot(x=frequency, y=gitparser.CODE_CHANGES, data=df, ax=ax, color=plt.cm.tab20c(1), cut=0)
     ax.set_xticks(commit_df.index)
     ax.set_xticklabels([], minor=1)
     ax.set_xticklabels(xticklabels, rotation=0)
     ax.set_ylabel(gitparser.CODE_CHANGES)
-    ax.set_yscale('log')
-    ax.set_title('Avg code changes per commit')
-    # plt.gca().set_ylim(bottom=0)
+    # ax.set_yscale('log')
+    ax.set_title('Code changes per commit')
+    plt.gca().set_ylim(bottom=0)
     fig.savefig(os.path.join(output, 'commit_changes.png'), bbox_inches='tight')
     plt.close()
 

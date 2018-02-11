@@ -90,8 +90,8 @@ def format_commit_df(df, date_start, date_end):
     # handle date
     df[gitparser.DATE] = pd.to_datetime(df[gitparser.DATE], errors='coerce')
     df.set_index([gitparser.DATE], inplace=True)
-    df['month'] = df.index.strftime("%b'%y")
-    df['week'] = df.index.strftime("%b'%U'%y")
+    df['month'] = df['M'] = df.index.strftime("%b'%y")
+    df['week'] = df['W'] = df.index.strftime("%b'%U'%y")
     new_df = df[(df.index >= date_start) & (df.index < date_end)].sort_index()
     logging.info('Reduced commits from {initial_count:d} to {end_count:d} on date'.format(
         initial_count=df.shape[0], end_count=new_df.shape[0]))
@@ -150,11 +150,7 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
         pr_df = convert_prs_to_dateframe(merges, date_start, date_end)
 
         # ensure output directory exists
-        output = os.path.abspath(output)
-        try:
-            os.makedirs(output)
-        except OSError:
-            pass
+        os.makedirs(output, exist_ok=True)
         try:
             pr_df.to_csv(results_path)
         except OSError:
@@ -178,11 +174,7 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
         commit_df = convert_commits_to_dateframe(commits, date_start, date_end)
 
         # ensure output directory exists
-        output = os.path.abspath(output)
-        try:
-            os.makedirs(output)
-        except OSError:
-            pass
+        os.makedirs(output, exist_ok=True)
         try:
             commit_df.to_csv(results_path)
         except OSError:
@@ -209,8 +201,8 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
             # plot graphs
             directory = os.path.join(output, author_name.replace(' ', '_'))
             os.makedirs(directory, exist_ok=True)
-            graphs.plot_pr_stats(pr_df, directory, authors=[author_name], review_authors=recent_authors)
-            graphs.plot_commit_stats(commit_df, directory, authors=[author_name])
+            graphs.plot_pr_stats(pr_df, directory, authors=[author_name], review_authors=recent_authors, frequency='M')
+            graphs.plot_commit_stats(commit_df, directory, authors=[author_name], frequency='M')
             # copy web template to view them
             target_path = os.path.join(directory, 'index.html')
             with open(target_path, 'w') as f:
