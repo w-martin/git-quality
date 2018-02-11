@@ -19,6 +19,7 @@ def plot_pr_stats(df, output, authors, review_authors, frequency='M'):
     df = df[df[gitparser.AUTHOR].isin(authors)]
     if df.shape[0] < 1:
         return
+    freq_str = 'month' if 'M' == frequency else 'week'
 
     # groupings
     time_grouped_df = df.groupby(pd.Grouper(freq=frequency))
@@ -32,12 +33,12 @@ def plot_pr_stats(df, output, authors, review_authors, frequency='M'):
 
     # overall PR histogram
     pr_df = time_grouped_df[gitparser.AUTHOR].count()
-    xticklabels = [dt.strftime("%b'%y") if (i % 3 == 0) else '' for i, dt in enumerate(pr_df.index)]
+    xticklabels = [dt.strftime("%b'%y") if (i % (3 if 'M' == frequency else 10) == 0) else '' for i, dt in enumerate(pr_df.index)]
     fig, ax = plt.subplots(figsize=(7, 4))
     pr_df.plot(colormap='tab10', linewidth=3, ax=ax, kind='bar')
     ax.set_xticklabels(xticklabels, rotation=0)
     ax.set_ylabel('no. pull requests')
-    ax.set_title('No. merged pull requests per month')
+    ax.set_title('No. merged pull requests per {}'.format(freq_str))
     plt.gca().set_ylim(bottom=0)
     fig.savefig(os.path.join(output, 'prs.png'), bbox_inches='tight')
     plt.close()
@@ -52,7 +53,7 @@ def plot_pr_stats(df, output, authors, review_authors, frequency='M'):
     ax.set_xticklabels([], minor=1)
     ax.set_xticklabels(xticklabels, rotation=0)
     ax.set_ylabel(gitparser.NO_REVIEWS)
-    ax.set_title('Avg reviews per month')
+    ax.set_title('Avg reviews per {}'.format(freq_str))
     plt.gca().set_ylim(bottom=0)
     fig.savefig(os.path.join(output, 'avg_reviews.png'), bbox_inches='tight')
     plt.close()
@@ -63,7 +64,7 @@ def plot_pr_stats(df, output, authors, review_authors, frequency='M'):
     authors_df.plot(colormap='tab10', linewidth=2, kind='bar', ax=ax)
     ax.set_xticklabels(xticklabels, rotation=0)
     ax.set_ylabel('no. authors')
-    ax.set_title('No. authors per month')
+    ax.set_title('No. authors per {}'.format(freq_str))
     plt.gca().set_ylim(bottom=0)
     fig.savefig(os.path.join(output, 'authors.png'), bbox_inches='tight')
     plt.close()
@@ -76,7 +77,7 @@ def plot_pr_stats(df, output, authors, review_authors, frequency='M'):
     ax.set_xticklabels(xticklabels, rotation=0)
     ax.set_xticklabels([], minor=1)
     ax.set_ylabel('reviews / authors')
-    ax.set_title('Reviews / authors per month')
+    ax.set_title('Reviews / authors per {}'.format(freq_str))
     plt.gca().set_ylim(bottom=0)
     fig.savefig(os.path.join(output, 'reviews_by_authors.png'), bbox_inches='tight')
     plt.close()
@@ -87,7 +88,7 @@ def plot_pr_stats(df, output, authors, review_authors, frequency='M'):
     pr_author_df[pr_author_df.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
     ax.set_xticklabels(xticklabels, rotation=0)
     ax.set_ylabel('no. merged pull requests')
-    ax.set_title('No. merged pull requests by author per month')
+    ax.set_title('No. merged pull requests by author per {}'.format(freq_str))
     plt.gca().set_ylim(bottom=1)
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], labels[::-1], loc='upper left')
@@ -100,7 +101,7 @@ def plot_pr_stats(df, output, authors, review_authors, frequency='M'):
     reviews_df[reviews_df.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
     ax.set_xticklabels(xticklabels, rotation=0)
     ax.set_ylabel('no. reviews')
-    ax.set_title('No. reviews by reviewer per month')
+    ax.set_title('No. reviews by reviewer per {}'.format(freq_str))
     plt.gca().set_ylim(bottom=1)
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], labels[::-1], loc='upper left')
@@ -110,11 +111,13 @@ def plot_pr_stats(df, output, authors, review_authors, frequency='M'):
 
 def plot_commit_stats(df, output, authors, frequency='M'):
     df = df[df[gitparser.AUTHOR].isin(authors)]
+    freq_str = 'month' if 'M' == frequency else 'week'
+
     # groupings
     time_grouped_df = df.groupby(pd.Grouper(freq=frequency))
     time_author_grouped_df = df.groupby([pd.Grouper(freq=frequency), gitparser.AUTHOR])
     commit_df = time_grouped_df[gitparser.AUTHOR].count()
-    xticklabels = [dt.strftime("%b'%y") if (i % 3 == 0) else '' for i, dt in enumerate(commit_df.index)]
+    xticklabels = [dt.strftime("%b'%y") if (i % (3 if 'M' == frequency else 10) == 0) else '' for i, dt in enumerate(commit_df.index)]
     prs_by_author = time_author_grouped_df[gitparser.TITLE].count().unstack(gitparser.AUTHOR).loc[:, authors]
     pr_author_df = prs_by_author.fillna(0.)
     insertions_by_author = time_author_grouped_df[gitparser.INSERTIONS].sum().unstack(gitparser.AUTHOR).loc[:, authors]
@@ -129,7 +132,7 @@ def plot_commit_stats(df, output, authors, frequency='M'):
     pr_author_df[pr_author_df.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
     ax.set_xticklabels(xticklabels, rotation=0)
     ax.set_ylabel('no. commits')
-    ax.set_title('No. commits by author per month')
+    ax.set_title('No. commits by author per {}'.format(freq_str))
     plt.gca().set_ylim(bottom=1)
     commit_handles, commit_labels = ax.get_legend_handles_labels()
     ax.legend(commit_handles[::-1], commit_labels[::-1], loc='upper left')
@@ -144,7 +147,7 @@ def plot_commit_stats(df, output, authors, frequency='M'):
     (-deletions_df / 2).plot.bar(colormap='tab10_r', linewidth=2, ax=ax, stacked=True)
     ax.set_xticklabels(xticklabels, rotation=0)
     ax.set_ylabel('changes')
-    ax.set_title('Insertions / deletions by author per month')
+    ax.set_title('Insertions / deletions by author per {}'.format(freq_str))
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(power_ten_formatter))
     ax.legend(commit_handles[::-1], commit_labels[::-1], loc='upper left')
     fig.savefig(os.path.join(output, 'changes_by_author.png'), bbox_inches="tight")
@@ -156,7 +159,7 @@ def plot_commit_stats(df, output, authors, frequency='M'):
     code_files_df[code_files_df.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
     ax.set_xticklabels(xticklabels, rotation=0)
     ax.set_ylabel('code files changed')
-    ax.set_title('Code files changes by author per month')
+    ax.set_title('Code files changes by author per {}'.format(freq_str))
     ax.legend(commit_handles[::-1], commit_labels[::-1], loc='upper left')
     fig.savefig(os.path.join(output, 'code_files_by_author.png'), bbox_inches="tight")
     plt.close()
@@ -167,7 +170,7 @@ def plot_commit_stats(df, output, authors, frequency='M'):
     code_changes_df[code_changes_df.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
     ax.set_xticklabels(xticklabels, rotation=0)
     ax.set_ylabel('code lines changed')
-    ax.set_title('Code lines changed by author per month')
+    ax.set_title('Code lines changed by author per {}'.format(freq_str))
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(power_ten_formatter))
     ax.legend(commit_handles[::-1], commit_labels[::-1], loc='upper left')
     fig.savefig(os.path.join(output, 'code_changes_by_author.png'), bbox_inches="tight")
