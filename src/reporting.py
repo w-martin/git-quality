@@ -1,7 +1,10 @@
 """ Module for emailing notifications"""
 import os
 import smtplib
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+import html2text
 
 import util
 
@@ -33,10 +36,12 @@ def email_summary(email_address, content, subject):
     :param str email_address: the address to email
     """
     from_address = util.read_config('email')['from']
-    msg = MIMEText(content, 'html')
+    msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
     msg['From'] = from_address
     msg['To'] = email_address
+    msg.attach(MIMEText(html2text.html2text(content), 'plain'))
+    msg.attach(MIMEText(content, 'html'))
     s = smtplib.SMTP('localhost')
     s.sendmail(from_address, [email_address], msg.as_string())
     s.close()
