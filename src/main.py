@@ -124,7 +124,8 @@ def compute_daterange():
 @click.option('--srcpath')
 @click.option('--resume', is_flag=True, help='Load previously saved dataframe, if present')
 @click.option('--email', default=None, type=str, help='Email last month\'s summary to this address if set')
-def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None):
+@click.option('--authors/--no-authors', default=True)
+def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None, authors=True):
     results_path = os.path.join(output, 'prs.csv')
     date_start, date_end = compute_daterange()
     pr_df = None
@@ -191,7 +192,7 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
     date_threshold = pr_df.index.max().to_pydatetime() - datetime.timedelta(days=365 / 3)
     recent_authors = np.sort(pr_df[pr_df.index > date_threshold][gitparser.AUTHOR].unique())
     # plot graphs
-    graphs.plot_pr_stats(pr_df, output, authors=recent_authors)
+    graphs.plot_pr_stats(pr_df, output, authors=recent_authors, review_authors=recent_authors)
     graphs.plot_commit_stats(commit_df, output, authors=recent_authors)
     repo_name = os.path.basename(directory)
     # copy web template to view them
@@ -203,16 +204,17 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
     with open(target_path, 'w') as f:
         f.write(page_text.format(name=repo_name, nav=nav))
 
-    for author_name in recent_authors:
-        # plot graphs
-        directory = os.path.join(output, author_name.replace(' ', '_'))
-        os.makedirs(directory, exist_ok=True)
-        graphs.plot_pr_stats(pr_df, directory, authors=[author_name])
-        graphs.plot_commit_stats(commit_df, directory, authors=[author_name])
-        # copy web template to view them
-        target_path = os.path.join(directory, 'index.html')
-        with open(target_path, 'w') as f:
-            f.write(page_text.format(name=author_name, nav=''))
+    if authors:
+        for author_name in recent_authors:
+            # plot graphs
+            directory = os.path.join(output, author_name.replace(' ', '_'))
+            os.makedirs(directory, exist_ok=True)
+            graphs.plot_pr_stats(pr_df, directory, authors=[author_name], review_authors=recent_authors)
+            graphs.plot_commit_stats(commit_df, directory, authors=[author_name])
+            # copy web template to view them
+            target_path = os.path.join(directory, 'index.html')
+            with open(target_path, 'w') as f:
+                f.write(page_text.format(name=author_name, nav=''))
 
     # email award winners
     if email:
