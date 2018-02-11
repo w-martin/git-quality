@@ -13,6 +13,8 @@ body {
     background-color: #444;
     /*background-color: darkgray;*/
     color: white;
+    padding-top: 0.2cm;
+    padding-bottom: 1cm;
 }
 
 body p {
@@ -25,13 +27,13 @@ table {
 }
 
 th {
-    height: 50px;
+    height: 40px;
+    border-bottom: 1px solid #ddd;
 }
 
 th, td {
     padding: 15px;
     text-align: left;
-    border-bottom: 1px solid #ddd;
 }
 
 footer {
@@ -39,7 +41,7 @@ footer {
   right: 0;
   bottom: 0;
   left: 0;
-  padding: 1rem;
+  padding: 0.2cm;
   background-color: #333;
   text-align: center;
 }
@@ -50,12 +52,12 @@ span.horns {
 
 /* Navbar container */
 .navbar {
-  overflow: hidden;
   background-color: #333;
   font-family: Arial;
 width: 100%;
     top: 0;
     left: 0;
+  position: fixed;
 }
 
 /* Links inside the navbar */
