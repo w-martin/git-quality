@@ -68,7 +68,7 @@ def convert_prs_to_dateframe(commits, date_start, date_end):
     :rtype: pd.DataFrame
     """
     df = pd.DataFrame(commits, columns=gitparser.PR_COLUMNS)
-    df = format_commit_df(df, date_start, date_end)
+    format_commit_df(df)
     # one hot columns for reviewers
     mlb = sklearn.preprocessing.MultiLabelBinarizer()
     df = df.join(pd.DataFrame(mlb.fit_transform(df.pop(gitparser.REVIEWERS)),
@@ -83,16 +83,19 @@ def convert_commits_to_dateframe(commits, date_start, date_end):
     :rtype: pd.DataFrame
     """
     df = pd.DataFrame(commits, columns=gitparser.COMMIT_COLUMNS)
-    df = format_commit_df(df, date_start, date_end)
+    format_commit_df(df)
     return df
 
 
-def format_commit_df(df, date_start, date_end):
+def format_commit_df(df):
     # handle date
     df[gitparser.DATE] = pd.to_datetime(df[gitparser.DATE], errors='coerce')
     df.set_index([gitparser.DATE], inplace=True)
     df['month'] = df['M'] = df.index.strftime("%b'%y")
     df['week'] = df['W'] = df.index.strftime("%b'%U'%y")
+
+
+def reduce_df(df, date_start, date_end):
     new_df = df[(df.index >= date_start) & (df.index < date_end)].sort_index()
     logging.info('Reduced commits from {initial_count:d} to {end_count:d} on date'.format(
         initial_count=df.shape[0], end_count=new_df.shape[0]))
@@ -141,18 +144,17 @@ def run_tracking(pr_df, commit_df, srcpath, output, repo_name, home_url, recent_
                                      tracking=home_url + 'tracking.html', monitors=monitors_str))
 
     if is_today:
-        month_start = today - datetime.timedelta(days=28)
+        month_start = today - datetime.timedelta(days=14)
         week_start = today - datetime.timedelta(days=7)
         last_month_prs = pr_df[(pr_df.index >= month_start) & (pr_df.index < week_start)]
         last_week_prs = pr_df[pr_df.index >= week_start]
         last_week_commits = commit_df[commit_df.index >= week_start]
         last_mean = last_month_prs.no_reviews.mean()
-        last_std = last_month_prs.no_reviews.std()
         this_mean = last_week_prs.no_reviews.mean()
         review_text = 'The mean reviews per pull request was {avg_review_week}, ' \
                       '{status} previous weeks which saw a mean rate of {avg_review_month}'.format(
             avg_review_week=this_mean, avg_review_month=last_mean,
-            status='about the same as' if last_mean - last_std < this_mean < last_mean + last_std else
+            status='about the same as' if last_mean * 0.9 < this_mean < last_mean * 1.1 else
             'higher than' if this_mean > last_mean else 'lower than'
         )
 
@@ -179,15 +181,21 @@ def run_tracking(pr_df, commit_df, srcpath, output, repo_name, home_url, recent_
 @click.option('--plotgraphs/--no-plotgraphs', default=True)
 def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None, authors=True, plotgraphs=True):
     date_start, date_end = compute_daterange()
-    pr_df = fetch_pr_df(date_end, date_start, directory, output, resume)
-    commit_df = fetch_commit_df(date_end, date_start, directory, output, resume)
-
-    # filter for author
-    recent_authors = compute_recent_authors(pr_df)
+    pr_df_orig = fetch_pr_df(date_end, date_start, directory, output, resume)
+    commit_df_orig = fetch_commit_df(date_end, date_start, directory, output, resume)
 
     # copy web template to view them
     home_url = util.read_config('server')['url']
     repo_name = os.path.basename(directory)
+
+    # filter by date
+    pr_df = reduce_df(pr_df_orig, date_start, date_end)
+    commit_df = reduce_df(commit_df_orig, date_start, date_end)
+
+    # filter for author
+    recent_authors = compute_recent_authors(pr_df)
+
+    run_tracking(pr_df_orig, commit_df_orig, srcpath, output, repo_name, home_url, recent_authors)
 
     with open(os.path.join(srcpath, 'templates', 'index.html'), 'r') as f:
         page_text = f.read()
@@ -248,7 +256,6 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
                                          home=home_url, monthly=home_url + author_name.replace(' ', '_') + '/',
                                          weekly=home_url + 'weekly/' + author_name.replace(' ', '_'),
                                          tracking=home_url + 'tracking.html'))
-    run_tracking(pr_df, commit_df, srcpath, output, repo_name, home_url, recent_authors)
     # email award winners
     if email:
         metrics_df = compute_awards(pr_df)
@@ -265,6 +272,7 @@ def compute_nav(base_url, recent_authors, weekly=False):
 def compute_recent_authors(pr_df):
     date_threshold = pr_df.index.max().to_pydatetime() - datetime.timedelta(days=365 / 3)
     recent_authors = np.sort(pr_df[pr_df.index > date_threshold][gitparser.AUTHOR].unique())
+    recent_authors = [ra.strip().replace('\n', '') for ra in recent_authors]
     return recent_authors
 
 
