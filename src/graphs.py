@@ -11,6 +11,10 @@ import gitparser
 import punchcard
 
 
+def generate_xtick(i, dt, frequency):
+    return dt.strftime("%b'%y") if (i % (3 if 'M' == frequency else 9) == 0) else ''
+
+
 def plot_pr_stats(df, output, authors, review_authors, frequency='M'):
     """ Plots graphs indicating statistics on pull requests and reviews
     :param pd.DataFrame df: dataframe to plot
@@ -33,7 +37,7 @@ def plot_pr_stats(df, output, authors, review_authors, frequency='M'):
 
     # overall PR histogram
     pr_df = time_grouped_df[gitparser.AUTHOR].count()
-    xticklabels = [dt.strftime("%b'%y") if (i % (3 if 'M' == frequency else 10) == 0) else '' for i, dt in enumerate(pr_df.index)]
+    xticklabels = [generate_xtick(i, dt, frequency) for i, dt in enumerate(pr_df.index)]
     fig, ax = plt.subplots(figsize=(7, 4))
     pr_df.plot(colormap='tab10', linewidth=3, ax=ax, kind='bar')
     ax.set_xticklabels(xticklabels, rotation=0)
@@ -117,7 +121,7 @@ def plot_commit_stats(df, output, authors, frequency='M'):
     time_grouped_df = df.groupby(pd.Grouper(freq=frequency))
     time_author_grouped_df = df.groupby([pd.Grouper(freq=frequency), gitparser.AUTHOR])
     commit_df = time_grouped_df[gitparser.AUTHOR].count()
-    xticklabels = [dt.strftime("%b'%y") if (i % (3 if 'M' == frequency else 10) == 0) else '' for i, dt in enumerate(commit_df.index)]
+    xticklabels = [generate_xtick(i, dt, frequency) for i, dt in enumerate(commit_df.index)]
     prs_by_author = time_author_grouped_df[gitparser.TITLE].count().unstack(gitparser.AUTHOR).loc[:, authors]
     pr_author_df = prs_by_author.fillna(0.)
     insertions_by_author = time_author_grouped_df[gitparser.INSERTIONS].sum().unstack(gitparser.AUTHOR).loc[:, authors]
