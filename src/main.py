@@ -111,14 +111,14 @@ def compute_awards(merge_df):
 
 
 def compute_daterange():
-    today = datetime.date.today()
+    today = datetime.datetime.today()
     year = today.year - 1
     month = today.month - 1
     if 0 == month:
         month = 12
         year -= 1
-    start = datetime.datetime(year, month, 1)
-    end = datetime.datetime(today.year, today.month, 1)
+    start = datetime.datetime(today.year-1, today.month, 1)  # datetime.datetime(year, month, 1)
+    end = today  # datetime.datetime(today.year, today.month, 1)
     return start, end
 
 
@@ -154,7 +154,7 @@ def run_tracking(pr_df, commit_df, srcpath, output, repo_name, home_url, recent_
         review_text = 'The mean reviews per pull request was {avg_review_week:.2f}, ' \
                       '{status} previous weeks which saw a mean rate of {avg_review_month:.2f}'.format(
             avg_review_week=this_mean, avg_review_month=last_mean,
-            status='about the same as' if last_mean * 0.9 < this_mean < last_mean * 1.1 else
+            status='about the same as' if last_mean - 0.1 < this_mean < last_mean + 0.1 else
             'higher than' if this_mean > last_mean else 'lower than'
         )
 
