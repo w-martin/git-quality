@@ -21,13 +21,16 @@ def email_awards(email_address, awards_df, repo_name, srcpath=os.getcwd()):
     table = awards_df.to_html(col_space=5)
     content = content.format(repo=repo_name, month=month, table=table)
 
-    msg = MIMEText(content)
+    msg = MIMEMultipart('alternative')
     msg['Subject'] = '{repo} quality stats awards for {month}'.format(repo=repo_name, month=month)
     from_address = util.read_config('email')['from']
     msg['From'] = from_address
     msg['To'] = email_address
+    msg.attach(MIMEText(content, 'html'))
+    msg.attach(MIMEText(html2text.html2text(content), 'plain'))
     s = smtplib.SMTP('localhost')
-    s.sendmail(from_address, [email_address], msg.as_string())
+    for e in email_address.split(','):
+        s.sendmail(from_address, [e], msg.as_string())
     s.close()
 
 
@@ -43,5 +46,6 @@ def email_summary(email_address, content, subject):
     msg.attach(MIMEText(html2text.html2text(content), 'plain'))
     msg.attach(MIMEText(content, 'html'))
     s = smtplib.SMTP('localhost')
-    s.sendmail(from_address, [email_address], msg.as_string())
+    for e in email_address.split(','):
+        s.sendmail(from_address, [e], msg.as_string())
     s.close()

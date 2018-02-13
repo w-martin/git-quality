@@ -9,9 +9,29 @@
 <body>
 <div class="navbar">
     <a>git-quality</a>
-  <a href="{home}">Home</a>
-  <a href="{monthly}">Month view</a>
-  <a href="{weekly}">Week view</a>
+  <a href="{home_url}">Home</a>
+    <div class="dropdown">
+    <button class="dropbtn">View
+      <i class="fa fa-caret-down"></i>
+    </button>
+    <div class="dropdown-content">
+  <a href="{home_url}{timeframe}{author}">Monthly</a>
+  <a href="{home_url}weekly/{timeframe}{author}">Weekly</a>
+  <a href="{home_url}daily/{timeframe}{author}">Daily</a>
+    </div>
+  </div>
+    <div class="dropdown">
+    <button class="dropbtn">Timeframe
+      <i class="fa fa-caret-down"></i>
+    </button>
+    <div class="dropdown-content">
+      <a href="{home_url}{view}{author}">12 months</a>
+      <a href="{home_url}{view}6_months/{author}">6 months</a>
+      <a href="{home_url}{view}3_months/{author}">3 months</a>
+      <a href="{home_url}{view}4_weeks/{author}">4 weeks</a>
+      <!--<a href="{home_url}{view}7_days/{author}">7 days</a>-->
+    </div>
+  </div>
     <div class="dropdown">
     <button class="dropbtn">Authors
       <i class="fa fa-caret-down"></i>
@@ -20,9 +40,10 @@
       {nav}
     </div>
   </div>
-  <a href="{tracking}">Tracking</a>
+  <a href="{home_url}tracking.html">Tracking</a>
 </div>
-<h1>{name} stats <i class="fa fa-line-chart"></i></h1>
+<h1>{name}</h1>
+<h3>{view_text} stats for period of {timeframe_text} <i class="fa fa-line-chart"></i></h3>
     <div id="image-table">
     <table>
 	    <tr>

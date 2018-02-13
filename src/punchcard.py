@@ -40,6 +40,8 @@ def plot_punchcard(width, height, dates):
         stats[d] = {}
         for h in range(5, 29):
             stats[d][h] = np.sum(np.logical_and(dates.dayofweek == day_idx, dates.hour == h))
+            if np.isnan(stats[d][h]):
+                stats[d][h] = np.sum = 0
 
     days = [days[-1]] + days[:-1]
 
@@ -57,7 +59,7 @@ def plot_punchcard(width, height, dates):
     for d, hour_pair in stats.items():
         for h, value in hour_pair.items():
             all_values.append(value)
-    max_value = max(all_values)
+    max_value = 1 + max(all_values)
     final_data = []
     for d, hour_pair in stats.items():
         for h, value in hour_pair.items():
