@@ -1,127 +1,274 @@
+:root {
+    /** Variables **/
 
-/* Main content */
-.main {
-    margin-top: 30px; /* Add a top margin to avoid content overlay */
+    /** Colour palette **/
+    --dark-primary-colour: #455A64;
+    --light-primary-colour: #CFD8DC;
+    --primary-colour: #607D8B;
+    
+    --primary-text-colour: #212121;
+    --secondary-text-colour: #757575;
+    --primary-icon-text-colour: #FFFFFF;
+    
+    --primary-background-colour: #FAFAFA;
+    
+    --accent-colour: #9E9E9E;
+    --divider-colour: #BDBDBD;
+    
+    --light-grey: #EEEEEE;
+
+    /** Shadows **/
+    --primary-shadow: 0 3px 10px rgba(0,0,0,.23), 0 3px 10px rgba(0,0,0,.16);
+    --secondary-shadow: 0 2px 6px rgba(0,0,0,.2);
 }
 
-h1 {
-    font-weight: 900;
-    font-size: 48px;
+* {
+    font-family: 'Open Sans', sans-serif;
+    
+    color: var(--primary-text-colour);
+    
+    -webkit-transition: all 0.3s ease-in;
+    transition: all 0.3s ease-in;
 }
 
 body {
-    background-color: #444;
-    /*background-color: darkgray;*/
-    color: white;
-    padding-top: 0.2cm;
-    padding-bottom: 1cm;
+    margin: 0;
+    padding: 0;
+
+    color: var(--primary-text-colour);
+    background-color: var(--primary-background-colour);
 }
 
-body p {
-    font-size: 32px;
+/**
+ * Typography
+ **/
+h1 {
+    font-size: 48px;
+    font-weight: 600;
 }
+
+h4 {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+p {
+    font-size: 18px;
+    font-weight: 300;
+}
+
+a:hover { color: var(--primary-icon-text-colour); }
+
+/**
+ * General
+ **/
+.fa {
+    float: right;
+    color: var(--primary-colour)
+}
+
+/**
+ * Container
+ **/
+.main {
+    width: 100%;
+    height: 100%;
+}
+
+/**
+ * Header
+ **/
+header {
+    width: 100vw;
+    padding: 20px 40px;
+
+    position: fixed;
+    top: 0;
+
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-items: center;
+
+    background-color: var(--dark-primary-colour);
+
+    -webkit-box-shadow: var(--primary-shadow);
+    box-shadow: var(--primary-shadow);
+
+    box-sizing: border-box;
+}
+
+header .logo {
+    margin: 0;
+
+    color: var(--primary-background-colour);
+
+    font-size: 24px;
+    font-weight: 600;
+    font-style: italic;
+}
+
+/**
+ * Navigation
+ **/
+nav ul ul { display: none; }
+nav ul li:hover > ul{ display: block; }
+
+nav ul {
+	margin: 0;
+    padding: 0;
+
+    background-color: var(--dark-primary-colour);
+
+    list-style: none;
+	position: relative;
+}
+
+nav ul:after { content: ""; clear: both; display: block; }
+nav ul li { float: left; }
+nav ul li:hover a { color: var(--primary-icon-text-colour); }
+	
+nav ul li a {
+    padding: 0 40px;
+    display: block; 
+    color: var(--light-primary-colour);
+    text-decoration: none;
+}
+
+nav ul li .fa-caret-down { padding-left: 8px; }
+
+nav ul ul {
+    padding: 0;
+
+    position: absolute;
+    top: 100%;
+    
+    background: var(--primary-colour);
+}
+
+nav ul ul li {
+    position: relative;
+    float: none; 
+    text-align: center;
+}
+
+nav ul ul li a {
+    padding: 10px 40px;
+    color: var(--primary-icon-text-colour);
+}
+
+nav ul ul li a:hover { background: var(--dark-primary-colour); }
+
+nav ul ul ul {
+    position: absolute;
+    left: 100%; 
+    top: 0;
+}
+
+/**
+ * Primary content
+ **/
+.content {
+    width: 100%;
+    margin: 150px 0;
+    padding: 0 40px;
+
+    display: flex;
+    flex-flow: column nowrap;
+
+    box-sizing: border-box;
+}
+
+/**
+ * Default table design
+ **/
 
 table {
-    font-size: 24px;
-    width: 100%
+    width: 100%;
+    border-collapse: collapse;
 }
 
-th {
-    height: 40px;
-    border-bottom: 1px solid #ddd;
-}
+table thead { background-color: var(--primary-colour); }
 
-th, td {
-    padding: 15px;
+table thead tr th {
+    padding: 8px;
+    
+    border-bottom: 1px solid var(--accent-colour);
+    
     text-align: left;
+    font-weight: 300;
+    color: var(--primary-icon-text-colour);
 }
 
+table tbody tr td {
+    padding: 8px;
+    
+    border-bottom: 1px solid var(--accent-colour);
+    
+    text-align: left;
+    font-weight: 300;
+}
+
+table tbody tr:nth-child(even) {
+    color: var(--primary-icon-text-colour);
+    background-color: var(--light-grey);
+}
+
+table tbody tr:hover {
+    color: var(--primary-icon-text-colour);
+    background-color: var(--light-primary-colour);
+}
+
+/**
+ * Image table to display the graphs
+ **/
+ #image-table {
+    width: 100%;
+    height: auto;
+
+    display: flex;
+    flex-flow: row wrap;
+}
+
+#image-table > img {
+    width: 50%;
+    height: auto;
+
+    padding: 2em;
+
+    box-sizing: border-box;
+}
+
+.punchcard { margin: 20px auto; }
+
+/**
+ * Footer
+ **/
 footer {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  padding: 0.2cm;
-  background-color: #333;
-  text-align: center;
+    width: 100vw;
+
+    position: fixed;
+    bottom: 0;
+
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-items: center;
+
+    background-color: var(--dark-primary-colour);
+
+    -webkit-box-shadow: var(--primary-shadow);
+    box-shadow: var(--primary-shadow);
 }
 
-span.horns {
-    font-size: 32px;
+footer p {
+    padding: 8px 20px;
+    font-size: 14px;
+    color: var(--light-primary-colour);
 }
 
-/* Navbar container */
-.navbar {
-  background-color: #333;
-  font-family: Arial;
-width: 100%;
-    top: 0;
-    left: 0;
-  position: fixed;
-}
-
-/* Links inside the navbar */
-.navbar a {
-  float: left;
-  font-size: 16px;
-  color: white;
-  text-align: center;
-  padding: 14px 16px;
-  text-decoration: none;
-    font-weight: bold;
-}
-
-/* The dropdown container */
-.dropdown {
-  float: left;
-  overflow: hidden;
-}
-
-/* Dropdown button */
-.dropdown .dropbtn {
-  font-size: 16px;
-  border: none;
-  outline: none;
-  color: white;
-  padding: 14px 16px;
-  background-color: inherit;
-  font-family: inherit; /* Important for vertical align on mobile phones */
-  margin: 0; /* Important for vertical align on mobile phones */
-    font-weight: bold;
-}
-
-/* Add a red background color to navbar links on hover */
-.navbar a:hover, .dropdown:hover .dropbtn {
-  background-color: #f9f9f9;
-    color: black;
-}
-
-/* Dropdown content (hidden by default) */
-.dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: #f9f9f9;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
-}
-
-/* Links inside the dropdown */
-.dropdown-content a {
-  float: none;
-  color: black;
-  padding: 12px 16px;
-  text-decoration: none;
-  display: block;
-  text-align: left;
-}
-
-/* Add a grey background color to dropdown links on hover */
-.dropdown-content a:hover {
-  background-color: #ddd;
-}
-
-/* Show the dropdown menu on hover */
-.dropdown:hover .dropdown-content {
-  display: block;
+footer a {
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--secondary-colour);
 }
