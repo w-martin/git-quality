@@ -239,6 +239,20 @@ table tbody tr:hover {
     box-sizing: border-box;
 }
 
+@media screen and (max-width: 1000px) {
+    #image-table > img {
+        width: 100%;
+        padding: 4em;
+    }
+}
+
+@media screen and (min-width: 1500px) {
+    #image-table > img {
+        width: 33%;
+        padding: 3em;
+    }
+}
+
 .punchcard { margin: 20px auto; }
 
 /**
