@@ -34,7 +34,8 @@ def set_ax_color(ax, textcolor):
     ax.title.set_color(textcolor)
 
 
-def plot_pr_stats(df, output, authors, review_authors, frequency='M', view_text='Monthly', bgcolor='#444444', textcolor='white'):
+def plot_pr_stats(df, output, authors, review_authors, frequency='M', view_text='Monthly',
+                  bgcolor='#FAFAFA', textcolor='#212121'):
     """ Plots graphs indicating statistics on pull requests and reviews
     :param pd.DataFrame df: dataframe to plot
     :param str output: directory to save plots to
@@ -163,7 +164,7 @@ def plot_pr_stats(df, output, authors, review_authors, frequency='M', view_text=
         logging.exception(e)
 
 
-def plot_commit_stats(df, output, authors, frequency='M', view_text='Monthly', bgcolor='#444444', textcolor='white'):
+def plot_commit_stats(df, output, authors, frequency='M', view_text='Monthly', bgcolor='#FAFAFA', textcolor='#212121'):
     df = df[df[gitparser.AUTHOR].isin(authors)]
     freq_str = view_text.lower()[:-2]
 

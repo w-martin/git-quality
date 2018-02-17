@@ -70,13 +70,13 @@ def plot_punchcard(width, height, dates):
     
     cr.set_line_width (1)
     
-    # draw background to white
-    cr.set_source_rgb(233/255., 233/255., 241/255.)
+    # draw background to bgcolor
+    cr.set_source_rgb(250/255., 250/255., 250/255.)
     cr.rectangle(left, top, 25 * distance, 8 * distance)
     cr.fill()
     
-    # set white
-    cr.set_source_rgb(1, 1, 1)
+    # set font color
+    cr.set_source_rgb(33/255., 33/255., 33/255.)
     
     # draw x-axis and y-axis
     cr.move_to(left, top)
