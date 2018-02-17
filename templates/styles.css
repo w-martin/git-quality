@@ -105,7 +105,7 @@ header .logo {
 
     font-size: 24px;
     font-weight: 600;
-    font-style: italic;
+    font-style: inherit;
 }
 
 /**
@@ -153,7 +153,7 @@ nav ul ul li {
 }
 
 nav ul ul li a {
-    padding: 10px 40px;
+    padding: 10px 10px;
     color: var(--primary-icon-text-colour);
 }
 
@@ -170,7 +170,7 @@ nav ul ul ul {
  **/
 .content {
     width: 100%;
-    margin: 150px 0;
+    margin: 60px 0;
     padding: 0 40px;
 
     display: flex;
@@ -232,7 +232,7 @@ table tbody tr:hover {
 
 #image-table > img {
     width: 50%;
-    height: auto;
+    height: 50%;
 
     padding: 2em;
 
@@ -284,5 +284,5 @@ footer p {
 footer a {
     font-weight: 600;
     text-decoration: none;
-    color: var(--secondary-colour);
+    color: var(--primary-icon-text-colour);
 }
