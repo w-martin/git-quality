@@ -64,8 +64,11 @@ def run_tracking(pr_df, commit_df, srcpath, output, repo_name, home_url, recent_
     authors = config['authors']
 
     monitors_str = '<tr>' \
-                   '<td>{email}</td><td>{day}</td><td>{objectives}</td><td>{authors}</td>' \
-                   '</tr>'.format(email=email, day=day, objectives=objectives, authors=authors)
+                        '<td data-label="Report to">{email}</td>' /
+                        '<td data-label="Day">{day}</td>' /
+                        '<td data-label="Objectives">{objectives}</td>' /
+                        '<td data-label="Authors">{authors}</td>' /
+                    '</tr>'.format(email=email, day=day, objectives=objectives, authors=authors)
 
     with open(os.path.join(srcpath, 'templates', 'tracking.html'), 'r') as f:
         tracking_text = f.read()
