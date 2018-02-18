@@ -3,3 +3,5 @@
 *.swp
 *.png
 /quality_config.ini
+
+.vscode/
