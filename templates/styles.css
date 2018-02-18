@@ -321,7 +321,7 @@ table tbody tr:hover {
  **/
 footer {
     width: 100vw;
-    padding: var(--base-font-size) calc(var(--base-font-size) * 5);
+    padding: calc(var(--base-font-size)*0.1) calc(var(--base-font-size) * 5);
 
     position: fixed;
     bottom: 0;
@@ -349,6 +349,11 @@ footer a {
     font-weight: 600;
     text-decoration: none;
     color: var(--light-primary-colour);
+}
+
+footer .horns {
+    font-size: calc(var(--base-font-size) * 4);
+    color: var(--primary-icon-text-colour);
 }
 
 /**
@@ -497,4 +502,8 @@ footer a {
     }
 
     footer p { font-size: calc(var(--base-font-size) * 1.2); }
+
+    footer .horns {
+        font-size: calc(var(--base-font-size) * 2.4);
+    }
 }
