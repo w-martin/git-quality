@@ -2,211 +2,219 @@
 <html lang="en">
   <head>
       <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-          <title>{name} stats</title>
+        <title>{name} stats</title>
 
-          <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300i,400,600">
-          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-          <link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300i,400,600">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="styles.css">
   </head>
     <body>
         <div class="main">
-                <header>
-                    <h4 class="logo">git-quality</h4>
+            <header>
+                <!-- Logo -->
+                <h4 class="logo">git-quality</h4>
+                
+                <!-- Open menu button for mobile/tablets -->
+                <i class="fa fa-bars show-tablet open-menu toggle-mobile-menu"></i>
+                
+                <!-- Close menu button for mobile/tablets -->
+                <i class="fa fa-close close-menu toggle-mobile-menu"></i>
+                
+                <!-- Primary navigation -->
+                <nav class="mobile-nav">
+                    <ul>
+                        <!-- Home -->
+                        <li>
+                            <a href="{home_url}">Home</a>
+                        </li>
     
-                    <!-- Primary navigation -->
-                    <nav>
-                        <ul>
-                            <!-- Home -->
-                            <li>
-                                <a href="{home_url}">Home</a>
-                            </li>
+                        <!-- View -->
+                        <li>
+                            <a class="mobile-nav-dropdown" href="#">View</a>
+                            
+                            <ul>
+                                <li class="nav-separator hide-mobile"></li>
     
-                            <!-- View -->
-                            <li>
-                                <a href="#">View <i class="fa fa-caret-down"></i></a>
-                                
-                                <ul>
-                                    <li>
-                                        <a href="{home_url}{timeframe}{author}">Monthly</a>
-                                    </li>
+                                <li>
+                                    <a href="{home_url}{timeframe}{author}">Monthly</a>
+                                </li>
     
-                                    <li>
-                                        <a href="{home_url}weekly/{timeframe}{author}">Weekly</a>
-                                    </li>
+                                <li>
+                                    <a href="{home_url}weekly/{timeframe}{author}">Weekly</a>
+                                </li>
     
-                                    <li>
-                                        <a href="{home_url}daily/{timeframe}{author}">Daily</a>
-                                    </li>
-                                </ul>
-                            </li>
+                                <li>
+                                    <a href="{home_url}daily/{timeframe}{author}">Daily</a>
+                                </li>
+                            </ul>
+                        </li>
     
-                            <!-- Timeframe -->
-                            <li>
-                                <a href="#">Timeframe <i class="fa fa-caret-down"></i></a>
-                                
-                                <ul>
-                                    <li>
-                                        <a href="{home_url}{view}{author}">12 months</a>
-                                    </li>
+                        <!-- Timeframe -->
+                        <li>
+                            <a class="mobile-nav-dropdown" href="#">Timeframe</a>
+                            
+                            <ul>
+                                <li class="nav-separator hide-mobile"></li>
     
-                                    <li>
-                                        <a href="{home_url}{view}6_months/{author}">6 months</a>
-                                    </li>
+                                <li>
+                                    <a href="{home_url}{view}{author}">12 months</a>
+                                </li>
     
-                                    <li>
-                                        <a href="{home_url}{view}3_months/{author}">3 months</a>
-                                    </li>
+                                <li>
+                                    <a href="{home_url}{view}6_months/{author}">6 months</a>
+                                </li>
     
-                                    <li>
-                                        <a href="{home_url}{view}4_weeks/{author}">4 weeks</a>
-                                    </li>
+                                <li>
+                                    <a href="{home_url}{view}3_months/{author}">3 months</a>
+                                </li>
     
-                                    <!-- <li>
-                                        <a href="{home_url}{view}7_days/{author}">7 days</a>
-                                    </li> -->
-                                </ul>
-                            </li>
+                                <li>
+                                    <a href="{home_url}{view}4_weeks/{author}">4 weeks</a>
+                                </li>
     
-                            <!-- View -->
-                            <li>
-                                <a href="#">Authors <i class="fa fa-caret-down"></i></a>
-                                
-                                <ul>
-                                    <li>
-                                        {nav}
-                                    </li>
-                                </ul>
-                            </li>
+                                <!-- <li>
+                                    <a href="{home_url}{view}7_days/{author}">7 days</a>
+                                </li> -->
+                            </ul>
+                        </li>
     
-                            <!-- Tracking -->
-                            <li>
-                                <a href="{home_url}tracking.html">Tracking</a>
-                            </li>
-                        </ul>
-                    </nav>
-                </header>
+                        <!-- View -->
+                        <li>
+                            <a class="mobile-nav-dropdown" href="#">Authors</a>
+                            
+                            <ul>
+                                <li class="nav-separator hide-mobile"></li>
     
-                <div class="content">
-                    <h1>{name} tracking</h1>
-                    
-                    <p>
-                        git-quality can send weekly reports on your repository quality metrics <i class="fa fa-line-chart"></i>
-                    </p>
-                    
-                    <h4>Active monitors:</h4>
-                    
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Report to</th>
-                                <th>Day</th>
-                                <th>Objectives</th>
-                                <th>Authors</th>
-                            </tr>
-                        </thead>
+                                <li>
+                                    {nav}
+                                </li>
+                            </ul>
+                        </li>
+    
+                        <!-- Tracking -->
+                        <li>
+                            <a href="{home_url}tracking.html">Tracking</a>
+                        </li>
+                    </ul>
+                </nav>
+            </header>
 
-                        <tbody>
-                            <tr>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                                <td>
-                                    Test
-                                </td>
-                            </tr>
-                            <!-- {monitors} -->
-                        </tbody>
-                    </table>
-                </div>
+            <div class="content">
+                <h1>{name} tracking</h1>
+                
+                <p>
+                    git-quality can send weekly reports on your repository quality metrics <i class="fa fa-line-chart hide-mobile"></i>
+                </p>
+                
+                <h4>Active monitors:</h4>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Report to</th>
+                            <th>Day</th>
+                            <th>Objectives</th>
+                            <th>Authors</th>
+                        </tr>
+                    </thead>
 
-                <footer>
-                    <p>
-                        Generated by <a href="https://github.com/w-martin/git-quality/">git-quality v0.9</a>
-                    </p>
-                    
-                    <p>
-                        Written by <a href="https://github.com/w-martin">William Martin <span class="horns">&#x1F918;</span></a>
-                    </p>
-                </footer>
+                    <tbody>
+                        <!-- BEGIN: Dummy data to show how the table should be built -->
+                        <tr>
+                            <td data-label="Report to">
+                                Test
+                            </td>
+                            <td data-label="Day">
+                                Test
+                            </td>
+                            <td data-label="Objectives">
+                                Test
+                            </td>
+                            <td data-label="Authors">
+                                Test
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td data-label="Report to">
+                                Test
+                            </td>
+                            <td data-label="Day">
+                                Test
+                            </td>
+                            <td data-label="Objectives">
+                                Test
+                            </td>
+                            <td data-label="Authors">
+                                Test
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td data-label="Report to">
+                                Test
+                            </td>
+                            <td data-label="Day">
+                                Test
+                            </td>
+                            <td data-label="Objectives">
+                                Test
+                            </td>
+                            <td data-label="Authors">
+                                Test
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td data-label="Report to">
+                                Test
+                            </td>
+                            <td data-label="Day">
+                                Test
+                            </td>
+                            <td data-label="Objectives">
+                                Test
+                            </td>
+                            <td data-label="Authors">
+                                Test
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td data-label="Report to">
+                                Test
+                            </td>
+                            <td data-label="Day">
+                                Test
+                            </td>
+                            <td data-label="Objectives">
+                                Test
+                            </td>
+                            <td data-label="Authors">
+                                Test
+                            </td>
+                        </tr>
+                        <!-- END: Dummy data to show how the table should be built -->
+                        
+                        <!-- {monitors} -->
+                    </tbody>
+                </table>
             </div>
-        </body>
+
+            <footer>
+                <p>
+                    Generated by <a href="https://github.com/w-martin/git-quality/">git-quality v0.9</a>
+                </p>
+                
+                <p>
+                    Written by <a href="https://github.com/w-martin">William Martin <span class="horns">&#x1F918;</span></a>
+                </p>
+            </footer>
+        </div>
+
+        <script type="text/javascript" src="scripts.js"></script>
+    </body>
 </html>
