@@ -307,7 +307,7 @@ table tbody tr:hover {
 
 #image-table > img {
     width: 50%;
-    height: auto;
+    height: 50%;
 
     padding: calc(var(--base-font-size) * 4);
 
@@ -348,7 +348,7 @@ footer p {
 footer a {
     font-weight: 600;
     text-decoration: none;
-    color: var(--secondary-colour);
+    color: var(--light-primary-colour);
 }
 
 /**
