@@ -175,25 +175,28 @@ def plot_commit_stats(df, output, authors, start_date, frequency='M', view_text=
     try:
         # file changes
         df_insertions = pd.DataFrame(index=xticks, columns=authors, data=0)
-        df_insertions[authors] = time_author_grouped_df[gitparser.INSERTIONS].sum().unstack(
-            gitparser.AUTHOR, fill_value=0).loc[:, authors]
+        df_insertions[authors] = (time_author_grouped_df[gitparser.INSERTIONS].sum().unstack(
+            gitparser.AUTHOR, fill_value=0).loc[:, authors] - time_author_grouped_df[gitparser.DELETIONS].sum().unstack(
+            gitparser.AUTHOR, fill_value=0).loc[:, authors]).clip(lower=0)
         df_insertions.to_json(os.path.join(output, 'insertions.json'))
 
         df_deletions = pd.DataFrame(index=xticks, columns=authors, data=0)
-        df_deletions[authors] = time_author_grouped_df[gitparser.DELETIONS].sum().unstack(
-            gitparser.AUTHOR, fill_value=0).loc[:, authors]
+        df_deletions[authors] = (time_author_grouped_df[gitparser.DELETIONS].sum().unstack(
+            gitparser.AUTHOR, fill_value=0).loc[:, authors] - time_author_grouped_df[gitparser.INSERTIONS].sum().unstack(
+            gitparser.AUTHOR, fill_value=0).loc[:, authors]).clip(lower=0)
         df_deletions.to_json(os.path.join(output, 'deletions.json'))
 
         fig, ax = plt.subplots(figsize=(7, 4))
-        df_insertions[df_insertions.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
+        df_insertions[df_insertions.columns[::-1]].plot.bar(colormap='tab10', linewidth=4, ax=ax, stacked=False)
         ax.set_prop_cycle(None)
-        (-df_deletions)[df_deletions.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
+        (-df_deletions)[df_deletions.columns[::-1]].plot.bar(colormap='tab10', linewidth=4, ax=ax, stacked=False)
         ax.axhline(0, color='white')
         ax.set_xticklabels(xticklabels, rotation=0)
         ax.set_ylabel('lines changed')
-        ax.set_title('Line insertions / deletions by author per {}'.format(freq_str))
+        ax.set_yscale('symlog')
+        ax.set_title('Net insertions / deletions by author per {}'.format(freq_str))
         ax.yaxis.set_major_formatter(mtick.FuncFormatter(power_ten_formatter))
-        ax.legend(commit_handles[::-1], commit_labels[::-1], loc='upper left')
+        ax.legend(commit_handles[::-1], commit_labels[::-1], loc='best', fontsize='x-small')
         set_ax_color(ax, textcolor)
         fig.savefig(os.path.join(output, 'changes_by_author.png'), bbox_inches='tight', facecolor=bgcolor)
         plt.close()
