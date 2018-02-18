@@ -8,7 +8,7 @@ from email.mime.text import MIMEText
 import html2text
 import pandas as pd
 
-import html
+import htmls
 import util
 
 
@@ -72,8 +72,8 @@ def run_tracking(pr_df, commit_df, srcpath, output, repo_name, home_url, recent_
     target_path = os.path.join(output, 'tracking.html')
     with open(target_path, 'w') as f:
         f.write(tracking_text.format(name=repo_name,
-                                     nav=html.compute_nav(home_url, view='', timeframe='',
-                                                          recent_authors=recent_authors),
+                                     nav=htmls.compute_nav(home_url, view='', timeframe='',
+                                                           recent_authors=recent_authors),
                                      home_url=home_url, timeframe='', view='',
                                      author='', monitors=monitors_str))
 
