@@ -1,6 +1,6 @@
 """ Main entry point """
 import datetime
-import html
+import htmls
 import logging
 import os
 import shutil
@@ -99,14 +99,12 @@ def format_commit_df(df):
 
 def compute_dateranges():
     today = datetime.datetime.today()
-    month_12 = today - datetime.timedelta(days=365)
-    month_6 = today - datetime.timedelta(days=183)
-    month_3 = today - datetime.timedelta(days=92)
-    weeks_4 = today - datetime.timedelta(days=28)
-    weeks_1 = today - datetime.timedelta(days=7)
-    return (weeks_4, '4_weeks/', '4 weeks'), (month_12, '', '12 months'), (month_6, '6_months/', '6 months'), \
-           (month_3, '3_months/', '3 months'), (weeks_4, '4_weeks/', '4 weeks')
-# (weeks_1, '7_days/', '7 days')
+    month_12 = (today - datetime.timedelta(days=365), '', '12 months')
+    month_6 = (today - datetime.timedelta(days=183), '6_months/', '6 months')
+    month_3 = (today - datetime.timedelta(days=92), '3_months/', '3 months')
+    month_1 = (today - datetime.timedelta(days=28), '1_month/', '1 month')
+    weeks_1 = (today - datetime.timedelta(days=7), '7_days/', '7 days')
+    return month_12, month_6, month_3
 
 
 @click.command()
@@ -144,18 +142,19 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
         shutil.copy(os.path.join(srcpath, 'templates', 'styles.css'), os.path.join(dirname, 'styles.css'))
         with open(target_path, 'w') as f:
             f.write(page_text.format(name=repo_name if '' == author else author,
-                                     nav=html.compute_nav(home_url, view, timeframe, recent_authors),
+                                     nav=htmls.compute_nav(home_url, view, timeframe, recent_authors),
                                      home_url=home_url, timeframe=timeframe, view=view,
                                      author='' if '' == author else author.replace(' ', '_') + '/',
                                      timeframe_text=timeframe_text, view_text=view_text))
         # plot graphs
         if plotgraphs:
             graphs.plot_pr_stats(pr_df[pr_df.index > date_from], dirname,
-                                 authors=recent_authors if '' == author else [author],
+                                 authors=recent_authors if '' == author else [author], start_date=date_from,
                                  frequency=frequency, view_text=view_text, review_authors=recent_authors)
-            graphs.plot_commit_stats(commit_df[commit_df.index > date_from], dirname, frequency=frequency,
-                                     view_text=view_text,
+            graphs.plot_commit_stats(commit_df[commit_df.index > date_from], dirname, start_date=date_from,
+                                     frequency=frequency, view_text=view_text,
                                      authors=recent_authors if '' == author else [author])
+        break
 
     # email award winners
     if email:

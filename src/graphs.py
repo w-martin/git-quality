@@ -1,7 +1,9 @@
 """ Graphing functions """
+import itertools
 import logging
 import os
 
+import datetime
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
@@ -34,7 +36,7 @@ def set_ax_color(ax, textcolor):
     ax.title.set_color(textcolor)
 
 
-def plot_pr_stats(df, output, authors, review_authors, frequency='M', view_text='Monthly',
+def plot_pr_stats(df, output, authors, review_authors, start_date, frequency='M', view_text='Monthly',
                   bgcolor='#FAFAFA', textcolor='#212121'):
     """ Plots graphs indicating statistics on pull requests and reviews
     :param pd.DataFrame df: dataframe to plot
@@ -45,6 +47,7 @@ def plot_pr_stats(df, output, authors, review_authors, frequency='M', view_text=
     if df.shape[0] < 1:
         return
     freq_str = view_text.lower()[:-2]
+    xticks, ranges, xticklabels = generate_xticks(start_date, frequency)
 
     try:
         # groupings
@@ -54,15 +57,12 @@ def plot_pr_stats(df, output, authors, review_authors, frequency='M', view_text=
 
         prs_by_author = time_author_grouped_df[gitparser.TITLE].count().unstack(gitparser.AUTHOR).loc[:, authors]
         reviews_by_person = time_grouped_df[reviewer_cols].sum().loc[:, review_authors]
-
-
     except Exception as e:
         logging.exception(e)
     try:
 
         # overall PR histogram
         pr_df = time_grouped_df[gitparser.AUTHOR].count()
-        xticklabels = [generate_xtick(i, dt, frequency) for i, dt in enumerate(pr_df.index)]
         fig, ax = plt.subplots(figsize=(7, 4))
         pr_df.plot(colormap='tab10', linewidth=3, ax=ax, kind='bar')
         ax.set_xticklabels(xticklabels, rotation=0)
@@ -110,23 +110,6 @@ def plot_pr_stats(df, output, authors, review_authors, frequency='M', view_text=
     except Exception as e:
         logging.exception(e)
 
-    # try:
-    #     # reviews / author by month
-    #     reviews_author_df = (time_grouped_df[gitparser.NO_REVIEWS].sum() / authors_df)
-    #     fig, ax = plt.subplots(figsize=(7, 4))
-    #     reviews_author_df.plot(colormap='tab10', linewidth=2, ax=ax)
-    #     ax.set_xticks(pr_df.index)
-    #     ax.set_xticklabels(xticklabels, rotation=0)
-    #     ax.set_xticklabels([], minor=1)
-    #     ax.set_ylabel('reviews / authors')
-    #     ax.set_title('Reviews / authors per {}'.format(freq_str))
-    #     plt.gca().set_ylim(bottom=0)
-    #     set_ax_color(ax, textcolor)
-    #     fig.savefig(os.path.join(output, 'reviews_by_authors.png'), bbox_inches='tight', facecolor=bgcolor)
-    #     plt.close()
-    # except Exception as e:
-    #     logging.exception(e)
-
     try:
         # PRs by author
         pr_author_df = prs_by_author.fillna(0.)
@@ -164,16 +147,17 @@ def plot_pr_stats(df, output, authors, review_authors, frequency='M', view_text=
         logging.exception(e)
 
 
-def plot_commit_stats(df, output, authors, frequency='M', view_text='Monthly', bgcolor='#FAFAFA', textcolor='#212121'):
+def plot_commit_stats(df, output, authors, start_date, frequency='M', view_text='Monthly',
+                      bgcolor='#FAFAFA', textcolor='#212121'):
     df = df[df[gitparser.AUTHOR].isin(authors)]
     freq_str = view_text.lower()[:-2]
+    xticks, ranges, xticklabels = generate_xticks(start_date, frequency)
 
     try:
         # groupings
         time_grouped_df = df.groupby(pd.Grouper(freq=frequency))
         time_author_grouped_df = df.groupby([pd.Grouper(freq=frequency), gitparser.AUTHOR])
         commit_df = time_grouped_df[gitparser.AUTHOR].count()
-        xticklabels = [generate_xtick(i, dt, frequency) for i, dt in enumerate(commit_df.index)]
         prs_by_author = time_author_grouped_df[gitparser.TITLE].count().unstack(gitparser.AUTHOR).loc[:, authors]
         pr_author_df = prs_by_author.fillna(0.)
         insertions_by_author = time_author_grouped_df[gitparser.INSERTIONS].sum().unstack(gitparser.AUTHOR).loc[:, authors]
@@ -282,6 +266,35 @@ def plot_commit_stats(df, output, authors, frequency='M', view_text='Monthly', b
     # punch card
     plot = punchcard.plot_punchcard(1000, 400, df.index)
     plot.write_to_png(os.path.join(output, 'punchcard.png'))
+
+
+def compute_next_month(d):
+    next_d = d - datetime.timedelta(weeks=4)
+    next_d = datetime.datetime(next_d.year, next_d.month, 1)
+    return next_d
+
+
+def generate_xticks(start_date, frequency):
+    ticks = []
+    d = datetime.datetime.today()
+    if frequency == 'M':
+        compute_next_date = compute_next_month
+    elif frequency == 'W':
+        compute_next_date = lambda x: x - datetime.timedelta(days=7)
+    elif frequency == 'D':
+        compute_next_date = lambda x: x - datetime.timedelta(days=1)
+    else:
+        raise NotImplementedError('Not implemented for frequency {}'.format(frequency))
+
+    while d > start_date:
+        ticks += [d]
+        d = compute_next_date(d)
+    ticks += [d]
+    ticks = ticks[::-1]
+    ranges = list(zip(ticks[:-1], ticks[1:]))
+    ticks = ticks[1:]
+    tick_labels = [generate_xtick(i, d, frequency) for i, d in enumerate(ticks)]
+    return ticks, ranges, tick_labels
 
 
 def power_ten_formatter(x, pos):
