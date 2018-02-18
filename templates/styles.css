@@ -56,7 +56,7 @@ h1 {
 }
 
 h4 {
-    font: calc(var(--base-font-size) * 3);
+    font-size: calc(var(--base-font-size) * 3);
     font-weight: 600;
 }
 
