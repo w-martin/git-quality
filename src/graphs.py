@@ -62,84 +62,80 @@ def plot_pr_stats(df, output, authors, review_authors, start_date, frequency='M'
     time_grouped_df = df.groupby(daterange_groupby(xticks, ranges))
     time_author_grouped_df = df.groupby([daterange_groupby(xticks, ranges), gitparser.AUTHOR])
 
+    # PRs by author
+    df_prs = pd.DataFrame(index=xticks, columns=authors, data=0)
     try:
-        # PRs by author
-        df_prs = pd.DataFrame(index=xticks, columns=authors, data=0)
         df_prs[authors] = time_author_grouped_df[gitparser.AUTHOR].count().unstack(fill_value=0)
-        df_prs.to_json(os.path.join(output, 'prs.json'))
+    except Exception:
+        pass
+    df_prs.to_json(os.path.join(output, 'prs.json'))
 
-        fig, ax = plt.subplots(figsize=(7, 4))
-        df_prs[authors[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
-        ax.set_xticklabels(xticklabels, rotation=0)
-        ax.set_ylabel('no. merged pull requests')
-        ax.set_title('No. merged pull requests by author per {}'.format(freq_str))
-        plt.gca().set_ylim(bottom=0)
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1], loc='upper left')
-        set_ax_color(ax, textcolor)
-        fig.savefig(os.path.join(output, 'prs.png'), bbox_inches='tight', facecolor=bgcolor)
-        plt.close()
+    fig, ax = plt.subplots(figsize=(7, 4))
+    df_prs[authors[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
+    ax.set_xticklabels(xticklabels, rotation=0)
+    ax.set_ylabel('no. merged pull requests')
+    ax.set_title('No. merged pull requests by author per {}'.format(freq_str))
+    plt.gca().set_ylim(bottom=0)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1], loc='upper left')
+    set_ax_color(ax, textcolor)
+    fig.savefig(os.path.join(output, 'prs.png'), bbox_inches='tight', facecolor=bgcolor)
+    plt.close()
 
-        # authors by month
-        df_authors = df_prs.clip(upper=1)
-        df_authors.to_json(os.path.join(output, 'authors.json'))
+    # authors by month
+    df_authors = df_prs.clip(upper=1)
+    df_authors.to_json(os.path.join(output, 'authors.json'))
 
-        fig, ax = plt.subplots(figsize=(7, 4))
-        df_authors[authors[::-1]].plot.bar(colormap='tab10', linewidth=2, stacked=True, ax=ax)
-        ax.set_xticklabels(xticklabels, rotation=0)
-        ax.set_ylabel('no. authors')
-        ax.set_title('No. authors per {}'.format(freq_str))
-        plt.gca().set_ylim(bottom=0)
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1], loc='upper left')
-        set_ax_color(ax, textcolor)
-        fig.savefig(os.path.join(output, 'authors.png'), bbox_inches='tight', facecolor=bgcolor)
-        plt.close()
-    except Exception as e:
-        logging.exception(e)
+    fig, ax = plt.subplots(figsize=(7, 4))
+    df_authors[authors[::-1]].plot.bar(colormap='tab10', linewidth=2, stacked=True, ax=ax)
+    ax.set_xticklabels(xticklabels, rotation=0)
+    ax.set_ylabel('no. authors')
+    ax.set_title('No. authors per {}'.format(freq_str))
+    plt.gca().set_ylim(bottom=0)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1], loc='upper left')
+    set_ax_color(ax, textcolor)
+    fig.savefig(os.path.join(output, 'authors.png'), bbox_inches='tight', facecolor=bgcolor)
+    plt.close()
 
+    # reviews by reviewer
+    df_reviews = pd.DataFrame(index=xticks, columns=review_authors, data=0)
     try:
-        # reviews by reviewer
-        df_reviews = pd.DataFrame(index=xticks, columns=review_authors, data=0)
         df_reviews[review_authors] = time_grouped_df[review_authors].sum().loc[:, review_authors]
-        df_reviews.to_json(os.path.join(output, 'reviews.json'))
-
-        fig, ax = plt.subplots(figsize=(7, 4))
-        df_reviews[review_authors[::-1]].plot.bar(colormap='tab10', linewidth=2, stacked=True, ax=ax)
-        ax.set_xticklabels(xticklabels, rotation=0)
-        ax.set_ylabel('no. reviews received')
-        ax.set_title('No. reviews received by reviewer per {}'.format(freq_str))
-        plt.gca().set_ylim(bottom=1)
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1], loc='upper left')
-        set_ax_color(ax, textcolor)
-        fig.savefig(os.path.join(output, 'reviews.png'), bbox_inches='tight', facecolor=bgcolor)
-        plt.close()
-
     except Exception as e:
-        logging.exception(e)
+        pass
+    df_reviews.to_json(os.path.join(output, 'reviews.json'))
 
-    try:
-        # avg reviews by month
-        df_avg_reviews = pd.DataFrame(index=xticks, columns=['mean', 'std'], data=0)
-        df_avg_reviews['mean'] = time_grouped_df[gitparser.NO_REVIEWS].mean()
-        df_avg_reviews['std'] = time_grouped_df[gitparser.NO_REVIEWS].std()
-        df_avg_reviews.to_json(os.path.join(output, 'avg_reviews.json'))
+    fig, ax = plt.subplots(figsize=(7, 4))
+    df_reviews[review_authors[::-1]].plot.bar(colormap='tab10', linewidth=2, stacked=True, ax=ax)
+    ax.set_xticklabels(xticklabels, rotation=0)
+    ax.set_ylabel('no. reviews received')
+    ax.set_title('No. reviews received by reviewer per {}'.format(freq_str))
+    plt.gca().set_ylim(bottom=1)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1], loc='upper left')
+    set_ax_color(ax, textcolor)
+    fig.savefig(os.path.join(output, 'reviews.png'), bbox_inches='tight', facecolor=bgcolor)
+    plt.close()
 
-        fig, ax = plt.subplots(figsize=(7, 4))
-        ax.errorbar(x=range(len(xticks)), y=df_avg_reviews['mean'], yerr=df_avg_reviews['std'], fmt='o',
-                    markersize=8, capsize=8)
-        ax.set_xticklabels([], minor=1)
-        ax.set_xticklabels([''] + [l for i, l in enumerate(xticklabels )if i % 2 == 0], rotation=0)
-        ax.set_xlabel('date')
-        ax.set_ylabel(gitparser.NO_REVIEWS)
-        ax.set_title('Avg reviews per {}'.format(freq_str))
-        plt.gca().set_ylim(bottom=0)
-        set_ax_color(ax, textcolor)
-        fig.savefig(os.path.join(output, 'avg_reviews.png'), bbox_inches='tight', facecolor=bgcolor)
-        plt.close()
-    except Exception as e:
-        logging.exception(e)
+    # avg reviews by month
+    df_avg_reviews = pd.DataFrame(index=xticks, columns=['mean', 'std'], data=0)
+    df_avg_reviews['mean'] = time_grouped_df[gitparser.NO_REVIEWS].mean()
+    df_avg_reviews['std'] = time_grouped_df[gitparser.NO_REVIEWS].std()
+    df_avg_reviews.to_json(os.path.join(output, 'avg_reviews.json'))
+
+    fig, ax = plt.subplots(figsize=(7, 4))
+    ax.errorbar(x=range(len(xticks)), y=df_avg_reviews['mean'], yerr=df_avg_reviews['std'], fmt='o',
+                markersize=8, capsize=8)
+    ax.set_xticklabels([], minor=1)
+    ax.set_xticklabels([''] + [l for i, l in enumerate(xticklabels )if i % 2 == 0], rotation=0)
+    ax.set_xlabel('date')
+    ax.set_ylabel(gitparser.NO_REVIEWS)
+    ax.set_title('Avg reviews per {}'.format(freq_str))
+    plt.gca().set_ylim(bottom=0)
+    set_ax_color(ax, textcolor)
+    fig.savefig(os.path.join(output, 'avg_reviews.png'), bbox_inches='tight', facecolor=bgcolor)
+    plt.close()
 
 
 def plot_commit_stats(df, output, authors, start_date, frequency='M', view_text='Monthly',
@@ -152,102 +148,102 @@ def plot_commit_stats(df, output, authors, start_date, frequency='M', view_text=
     time_grouped_df = df.groupby(daterange_groupby(xticks, ranges))
     time_author_grouped_df = df.groupby([daterange_groupby(xticks, ranges), gitparser.AUTHOR])
 
+    # commits
+    df_commits = pd.DataFrame(index=xticks, columns=authors, data=0)
     try:
-        # commits
-        df_commits = pd.DataFrame(index=xticks, columns=authors, data=0)
         df_commits[authors] = time_author_grouped_df[gitparser.TITLE].count().unstack(gitparser.AUTHOR, fill_value=0).loc[:, authors]
-        df_commits.to_json(os.path.join(output, 'commits.json'))
-
-        fig, ax = plt.subplots(figsize=(7, 4))
-        df_commits[df_commits.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
-        ax.set_xticklabels(xticklabels, rotation=0)
-        ax.set_ylabel('no. commits')
-        ax.set_title('No. commits by author per {}'.format(freq_str))
-        plt.gca().set_ylim(bottom=1)
-        commit_handles, commit_labels = ax.get_legend_handles_labels()
-        ax.legend(commit_handles[::-1], commit_labels[::-1], loc='upper left')
-        set_ax_color(ax, textcolor)
-        fig.savefig(os.path.join(output, 'commits.png'), bbox_inches='tight', facecolor=bgcolor)
-        plt.close()
     except Exception as e:
-        logging.exception(e)
+        pass
+    df_commits.to_json(os.path.join(output, 'commits.json'))
 
+    fig, ax = plt.subplots(figsize=(7, 4))
+    df_commits[df_commits.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
+    ax.set_xticklabels(xticklabels, rotation=0)
+    ax.set_ylabel('no. commits')
+    ax.set_title('No. commits by author per {}'.format(freq_str))
+    plt.gca().set_ylim(bottom=1)
+    commit_handles, commit_labels = ax.get_legend_handles_labels()
+    ax.legend(commit_handles[::-1], commit_labels[::-1], loc='upper left')
+    set_ax_color(ax, textcolor)
+    fig.savefig(os.path.join(output, 'commits.png'), bbox_inches='tight', facecolor=bgcolor)
+    plt.close()
+
+    # file changes
+    df_insertions = pd.DataFrame(index=xticks, columns=authors, data=0)
     try:
-        # file changes
-        df_insertions = pd.DataFrame(index=xticks, columns=authors, data=0)
         df_insertions[authors] = (time_author_grouped_df[gitparser.INSERTIONS].sum().unstack(
             gitparser.AUTHOR, fill_value=0).loc[:, authors] - time_author_grouped_df[gitparser.DELETIONS].sum().unstack(
             gitparser.AUTHOR, fill_value=0).loc[:, authors]).clip(lower=0)
-        df_insertions.to_json(os.path.join(output, 'insertions.json'))
+    except Exception as e:
+        pass
+    df_insertions.to_json(os.path.join(output, 'insertions.json'))
 
-        df_deletions = pd.DataFrame(index=xticks, columns=authors, data=0)
+    df_deletions = pd.DataFrame(index=xticks, columns=authors, data=0)
+    try:
         df_deletions[authors] = (time_author_grouped_df[gitparser.DELETIONS].sum().unstack(
             gitparser.AUTHOR, fill_value=0).loc[:, authors] - time_author_grouped_df[gitparser.INSERTIONS].sum().unstack(
             gitparser.AUTHOR, fill_value=0).loc[:, authors]).clip(lower=0)
-        df_deletions.to_json(os.path.join(output, 'deletions.json'))
-
-        fig, ax = plt.subplots(figsize=(7, 4))
-        df_insertions[df_insertions.columns[::-1]].plot.bar(colormap='tab10', linewidth=4, ax=ax, stacked=False)
-        ax.set_prop_cycle(None)
-        (-df_deletions)[df_deletions.columns[::-1]].plot.bar(colormap='tab10', linewidth=4, ax=ax, stacked=False)
-        ax.axhline(0, color='white')
-        ax.set_xticklabels(xticklabels, rotation=0)
-        ax.set_ylabel('lines changed')
-        ax.set_yscale('symlog')
-        ax.set_title('Net insertions / deletions by author per {}'.format(freq_str))
-        ax.yaxis.set_major_formatter(mtick.FuncFormatter(power_ten_formatter))
-        ax.legend(commit_handles[::-1], commit_labels[::-1], loc='best', fontsize='x-small')
-        set_ax_color(ax, textcolor)
-        fig.savefig(os.path.join(output, 'changes_by_author.png'), bbox_inches='tight', facecolor=bgcolor)
-        plt.close()
     except Exception as e:
-        logging.exception(e)
+        pass
+    df_deletions.to_json(os.path.join(output, 'deletions.json'))
 
+    fig, ax = plt.subplots(figsize=(7, 4))
+    df_insertions[df_insertions.columns[::-1]].plot.bar(colormap='tab10', linewidth=4, ax=ax, stacked=False)
+    ax.set_prop_cycle(None)
+    (-df_deletions)[df_deletions.columns[::-1]].plot.bar(colormap='tab10', linewidth=4, ax=ax, stacked=False)
+    ax.axhline(0, color='white')
+    ax.set_xticklabels(xticklabels, rotation=0)
+    ax.set_ylabel('lines changed')
+    ax.set_yscale('symlog')
+    ax.set_title('Net insertions / deletions by author per {}'.format(freq_str))
+    ax.yaxis.set_major_formatter(mtick.FuncFormatter(power_ten_formatter))
+    ax.legend(commit_handles[::-1], commit_labels[::-1], loc='best', fontsize='x-small')
+    set_ax_color(ax, textcolor)
+    fig.savefig(os.path.join(output, 'changes_by_author.png'), bbox_inches='tight', facecolor=bgcolor)
+    plt.close()
+
+    # code changes
+    df_code = pd.DataFrame(index=xticks, columns=authors, data=0)
     try:
-        # code changes
-        df_code = pd.DataFrame(index=xticks, columns=authors, data=0)
         df_code[authors] = time_author_grouped_df[gitparser.CODE_CHANGES].sum().unstack(
             gitparser.AUTHOR, fill_value=0).loc[:, authors]
-        df_code.to_json(os.path.join(output, 'code.json'))
-
-        fig, ax = plt.subplots(figsize=(7, 4))
-        df_code[df_code.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
-        ax.set_xticklabels(xticklabels, rotation=0)
-        ax.set_ylabel('code lines changed')
-        ax.set_title('LOC changed by author per {}'.format(freq_str))
-        ax.yaxis.set_major_formatter(mtick.FuncFormatter(power_ten_formatter))
-        ax.legend(commit_handles[::-1], commit_labels[::-1], loc='upper left')
-        set_ax_color(ax, textcolor)
-        fig.savefig(os.path.join(output, 'code.png'), bbox_inches='tight', facecolor=bgcolor)
-        plt.close()
     except Exception as e:
-        logging.exception(e)
-    try:
-        # avg changes per commit by month
-        df_avg_changes = pd.DataFrame(index=xticks, columns=['mean', 'std'], data=0)
-        df_avg_changes['mean'] = time_grouped_df[gitparser.CODE_CHANGES].mean()
-        df_avg_changes['std'] = time_grouped_df[gitparser.CODE_CHANGES].std()
-        df_avg_changes.to_json(os.path.join(output, 'avg_changes.json'))
+        pass
+    df_code.to_json(os.path.join(output, 'code.json'))
 
-        fig, ax = plt.subplots(figsize=(7, 4))
-        ax.errorbar(x=range(len(xticks)), y=df_avg_changes['mean'],
-                    yerr=df_avg_changes['std'], fmt='o',
-                    markersize=8, capsize=8)
-        # sb.violinplot(x=frequency, y=gitparser.CODE_CHANGES, data=df, ax=ax, color=plt.cm.tab20c(1), cut=0)
-        ax.set_xticklabels([], minor=1)
-        ax.set_xticklabels([''] + [l for i, l in enumerate(xticklabels) if i % 2 == 0], rotation=0)
-        ax.set_ylabel(gitparser.CODE_CHANGES)
-        ax.set_xlabel('date')
-        # ax.set_yscale('log')
-        ax.set_title('Average LOC changed per commit')
-        ax.set_ylabel('code lines changed')
-        plt.gca().set_ylim(bottom=0)
-        set_ax_color(ax, textcolor)
-        fig.savefig(os.path.join(output, 'avg_changes.png'), bbox_inches='tight', facecolor=bgcolor)
-        plt.close()
+    fig, ax = plt.subplots(figsize=(7, 4))
+    df_code[df_code.columns[::-1]].plot.bar(colormap='tab10', linewidth=2, ax=ax, stacked=True)
+    ax.set_xticklabels(xticklabels, rotation=0)
+    ax.set_ylabel('code lines changed')
+    ax.set_title('LOC changed by author per {}'.format(freq_str))
+    ax.yaxis.set_major_formatter(mtick.FuncFormatter(power_ten_formatter))
+    ax.legend(commit_handles[::-1], commit_labels[::-1], loc='upper left')
+    set_ax_color(ax, textcolor)
+    fig.savefig(os.path.join(output, 'code.png'), bbox_inches='tight', facecolor=bgcolor)
+    plt.close()
 
-    except Exception as e:
-        logging.exception(e)
+    # avg changes per commit by month
+    df_avg_changes = pd.DataFrame(index=xticks, columns=['mean', 'std'], data=0)
+    df_avg_changes['mean'] = time_grouped_df[gitparser.CODE_CHANGES].mean()
+    df_avg_changes['std'] = time_grouped_df[gitparser.CODE_CHANGES].std()
+    df_avg_changes.to_json(os.path.join(output, 'avg_changes.json'))
+
+    fig, ax = plt.subplots(figsize=(7, 4))
+    ax.errorbar(x=range(len(xticks)), y=df_avg_changes['mean'],
+                yerr=df_avg_changes['std'], fmt='o',
+                markersize=8, capsize=8)
+    # sb.violinplot(x=frequency, y=gitparser.CODE_CHANGES, data=df, ax=ax, color=plt.cm.tab20c(1), cut=0)
+    ax.set_xticklabels([], minor=1)
+    ax.set_xticklabels([''] + [l for i, l in enumerate(xticklabels) if i % 2 == 0], rotation=0)
+    ax.set_ylabel(gitparser.CODE_CHANGES)
+    ax.set_xlabel('date')
+    # ax.set_yscale('log')
+    ax.set_title('Average LOC changed per commit')
+    ax.set_ylabel('code lines changed')
+    plt.gca().set_ylim(bottom=0)
+    set_ax_color(ax, textcolor)
+    fig.savefig(os.path.join(output, 'avg_changes.png'), bbox_inches='tight', facecolor=bgcolor)
+    plt.close()
 
     # punch card
     plot = punchcard.plot_punchcard(1000, 400, df.index)

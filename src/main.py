@@ -104,7 +104,7 @@ def compute_dateranges():
     month_3 = (today - datetime.timedelta(days=92), '3_months/', '3 months')
     month_1 = (today - datetime.timedelta(days=28), '1_month/', '1 month')
     weeks_1 = (today - datetime.timedelta(days=7), '7_days/', '7 days')
-    return month_12, month_6, month_3
+    return month_12, month_6, month_3, month_1, weeks_1
 
 
 @click.command()
@@ -149,13 +149,12 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=True
                                      timeframe_text=timeframe_text, view_text=view_text))
         # plot graphs
         if plotgraphs:
-            # graphs.plot_pr_stats(pr_df, dirname,
-            #                      authors=recent_authors if '' == author else [author], start_date=date_from,
-            #                      frequency=frequency, view_text=view_text, review_authors=recent_authors)
+            graphs.plot_pr_stats(pr_df, dirname,
+                                 authors=recent_authors if '' == author else [author], start_date=date_from,
+                                 frequency=frequency, view_text=view_text, review_authors=recent_authors)
             graphs.plot_commit_stats(commit_df, dirname, start_date=date_from,
                                      frequency=frequency, view_text=view_text,
                                      authors=recent_authors if '' == author else [author])
-        break
 
 
 def compute_recent_authors(pr_df):
