@@ -463,7 +463,7 @@ footer a {
     }
 
     h4 {
-        font: calc(var(--base-font-size) * 2);
+        font-size: calc(var(--base-font-size) * 2);
         text-align: center;
     }
 
