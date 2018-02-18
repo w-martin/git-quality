@@ -55,7 +55,7 @@ def load_commit_log():
     """
     tempdir = tempfile.gettempdir()
     log_filename = os.path.join(tempdir, GITCOMMIT_FILENAME)
-    os.system('git log --use-mailmap --no-merges --stat > {log_filename}'.format(log_filename=log_filename))
+    os.system('git log --use-mailmap --no-merges --all --stat > {log_filename}'.format(log_filename=log_filename))
     with open(log_filename, 'r') as f:
         result = f.read()
     shutil.rmtree(tempdir, ignore_errors=True)
@@ -112,9 +112,9 @@ def compute_dateranges():
 @click.option('--output', required=True, help='Save graphs and stats to the given directory')
 @click.option('--srcpath')
 @click.option('--resume', is_flag=True, help='Load previously saved dataframe, if present')
-@click.option('--email', default=None, type=str, help='Email last month\'s summary to this address if set')
+@click.option('--email/--no-email', default=True, help='Email last month\'s summary to this address if set')
 @click.option('--plotgraphs/--no-plotgraphs', default=True)
-def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None, plotgraphs=True):
+def main(directory, output, srcpath='/opt/git-quality', resume=False, email=True, plotgraphs=True):
     pr_df = fetch_pr_df(directory, output, resume).sort_index()
     commit_df = fetch_commit_df(directory, output, resume).sort_index()
 
@@ -125,7 +125,8 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
     # filter for author
     recent_authors = compute_recent_authors(pr_df)
 
-    reporting.run_tracking(pr_df, commit_df, srcpath, output, repo_name, home_url, recent_authors)
+    if email:
+        reporting.run_tracking(pr_df, commit_df, srcpath, output, repo_name, home_url, recent_authors)
 
     with open(os.path.join(srcpath, 'templates', 'index.html'), 'r') as f:
         page_text = f.read()
@@ -133,7 +134,7 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
     for (date_from, timeframe, timeframe_text), (view, frequency, view_text), author in \
             itertools.product(compute_dateranges(),
                               [('', 'M', 'Monthly'), ('weekly/', 'W', 'Weekly'), ('daily/', 'D', 'Daily')],
-                              recent_authors + ['']):
+                              [''] + recent_authors):
 
         target_path = os.path.join(output, view, timeframe, author.replace(' ', '_'), 'index.html')
         print(target_path)
@@ -148,18 +149,13 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=None
                                      timeframe_text=timeframe_text, view_text=view_text))
         # plot graphs
         if plotgraphs:
-            graphs.plot_pr_stats(pr_df[pr_df.index > date_from], dirname,
-                                 authors=recent_authors if '' == author else [author], start_date=date_from,
-                                 frequency=frequency, view_text=view_text, review_authors=recent_authors)
-            graphs.plot_commit_stats(commit_df[commit_df.index > date_from], dirname, start_date=date_from,
+            # graphs.plot_pr_stats(pr_df, dirname,
+            #                      authors=recent_authors if '' == author else [author], start_date=date_from,
+            #                      frequency=frequency, view_text=view_text, review_authors=recent_authors)
+            graphs.plot_commit_stats(commit_df, dirname, start_date=date_from,
                                      frequency=frequency, view_text=view_text,
                                      authors=recent_authors if '' == author else [author])
         break
-
-    # email award winners
-    if email:
-        metrics_df = reporting.compute_awards(pr_df)
-        reporting.email_awards(email, metrics_df[:1], repo_name, srcpath=srcpath)
 
 
 def compute_recent_authors(pr_df):
