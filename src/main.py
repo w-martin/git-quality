@@ -141,6 +141,7 @@ def main(directory, output, srcpath='/opt/git-quality', resume=False, email=True
         dirname = os.path.dirname(target_path)
         os.makedirs(dirname, exist_ok=True)
         shutil.copy(os.path.join(srcpath, 'templates', 'styles.css'), os.path.join(dirname, 'styles.css'))
+        shutil.copy(os.path.join(srcpath, 'templates', 'scripts.js'), os.path.join(dirname, 'scripts.js'))
         with open(target_path, 'w') as f:
             f.write(page_text.format(name=repo_name if '' == author else author,
                                      nav=htmls.compute_nav(home_url, view, timeframe, recent_authors),
