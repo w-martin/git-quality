@@ -40,7 +40,7 @@ def load_pr_log():
     """
     tempdir = tempfile.gettempdir()
     log_filename = os.path.join(tempdir, GITMERGE_FILENAME)
-    os.system('git log --use-mailmap --merges > {log_filename}'.format(log_filename=log_filename))
+    os.system('git log --use-mailmap > {log_filename}'.format(log_filename=log_filename))
     with open(log_filename, 'r') as f:
         result = f.read()
     shutil.rmtree(tempdir, ignore_errors=True)
