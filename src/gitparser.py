@@ -16,6 +16,7 @@ pr_regex = re.compile('pull request')
 author_regex = re.compile('Author:\s+([\w\s]*\w)\s?[\<\\n]')
 date_regex = re.compile('Date:\s+(.*)\n')
 pr_title_regex = re.compile('Merged in [\S]+ \(pull request #[\d]+\)\s+((\<[\w+\s]+\>)?[\w\s\d.]*)\s')
+squash_title_regex = re.compile('\+[01]{4}\n\s+([\S\s]+)\s+Approved-by')
 commit_title_regex = re.compile('\+\d{4}\s*(\S[\S\s.]*)\s*\d+\sfile')
 commit_files_regex = re.compile('(\d+)\sfile')
 commit_insertions_regex = re.compile('(\d+)\sinsertion')
@@ -72,7 +73,10 @@ def parse_pull_requests(commit_hash, text):
     try:
         author = author_regex.search(text).group(1)
         date = date_regex.search(text).group(1)
-        title = pr_title_regex.search(text).group(1).strip()
+        try:
+            title = pr_title_regex.search(text).group(1).strip()
+        except AttributeError:
+            title = squash_title_regex.search(text).group(1).strip()
         reviewers = [r.strip().replace('\n', '') for r in reviewer_regex.findall(text)]
         # no self reviews allowed in these stats
         try:
@@ -96,6 +100,10 @@ def parse_commits(commit_hash, text):
     if len(text.strip()) == 0:
         return None
     try:
+        if reviewer_regex.search(text) is not None:
+            # squash merge
+            raise Exception('Squash merge found')
+
         author = author_regex.search(text).group(1)
         date = date_regex.search(text).group(1)
         title = commit_title_regex.search(text).group(1).strip()
@@ -126,7 +134,7 @@ def extract_pull_requests(commit_log):
     commits = commit_regex.split(commit_log)[1:]
     # form tuples of commit hash, log
     commits = list(zip(commits[::2], commits[1::2]))
-    logger1.info('Extracted {no_merges} merges'.format(no_merges=len(commits)))
+    logger1.info('Extracted {no_merges} commits'.format(no_merges=len(commits)))
     results = [parse_pull_requests(*c) for c in commits]
     results = list(filter(partial(is_not, None), results))
 
