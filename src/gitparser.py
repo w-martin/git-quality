@@ -100,6 +100,10 @@ def parse_commits(commit_hash, text):
     if len(text.strip()) == 0:
         return None
     try:
+        if reviewer_regex.search(text) is not None:
+            # squash merge
+            raise Exception('Squash merge found')
+
         author = author_regex.search(text).group(1)
         date = date_regex.search(text).group(1)
         title = commit_title_regex.search(text).group(1).strip()
